@@ -55,11 +55,11 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  
+
   // Handle search submission
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (pathname === '/') {
       // Update URL with search query
       const params = new URLSearchParams();
@@ -77,7 +77,7 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchInput(value);
-    
+
     // Only trigger real-time search on the homepage
     if (pathname === '/') {
       // Use a small delay to prevent excessive URL updates
@@ -97,7 +97,7 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
         {/* Left section - Menu toggle and Logo */}
         <div className="flex items-center">
-          <button 
+          <button
             onClick={() => setIsOpen(!isOpen)}
             className="mr-3 text-white md:hidden"
             aria-label="Toggle menu"
@@ -112,12 +112,12 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
             <span className="text-2xl font-bold text-white">Talez</span> */}
           </Link>
         </div>
-        
+
         {/* Middle section - Search bar */}
         <div className="hidden md:flex flex-1 max-w-2xl mx-8">
           <form onSubmit={handleSearch} className="relative w-full">
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={searchInput}
               onChange={handleSearchInputChange}
               placeholder="Search books and PDFs..."
@@ -129,7 +129,7 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <button 
+            <button
               type="submit"
               className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white p-1 rounded-full hover:bg-red-700 transition-colors"
               suppressHydrationWarning
@@ -140,26 +140,26 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
             </button>
           </form>
         </div>
-        
+
         {/* Right section - Sign in button or User profile */}
         <div className="flex items-center space-x-4">
-          
+
           {/* Upload button for authors */}
           {user && profile?.role === 'author' && (
-            <Link 
-              href="/author-dashboard" 
+            <Link
+              href="/author-dashboard"
               className="bg-primary hover:bg-primary-dark text-white py-1 px-4 rounded-full flex items-center transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-            
+
             </Link>
           )}
-          
+
           {user ? (
             <div className="relative" ref={dropdownRef}>
-              <button 
+              <button
                 onClick={toggleDropdown}
                 className="flex items-center space-x-2 text-white hover:text-primary transition-colors"
               >
@@ -179,58 +179,66 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
               </button>
               {dropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-[#1F1F1F] rounded-md shadow-lg py-1 z-50">
-                <Link 
-                  href="/profile"
-                  className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#303030] transition-colors"
-                >
-                  View Profile
-                </Link>
+                  <Link
+                    href="/profile"
+                    className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#303030] transition-colors"
+                  >
+                    View Profile
+                  </Link>
 
-                    {/* Reader and Author Toggle Button */}
-                      {profile && (
-                        <div className="px-4 py-2 border-b border-t border-gray-700">
-                          <p className="text-sm text-white">Account Type</p>
-                          <div className="flex mt-1 space-x-2">
-                            <button 
-                              onClick={() => updateRole('reader')}
-                              disabled={profile.role === 'author'}
-                              className={`text-xs px-2 py-1 rounded ${profile.role === 'reader' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'} ${profile.role === 'author' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            >
-                              Reader
-                            </button>
-                            <button 
-                              onClick={() => updateRole('author')}
-                              className={`text-xs px-2 py-1 rounded ${profile.role === 'author' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
-                            >
-                              Author
-                            </button>
+                  {/* Reader and Author Toggle Button */}
+                  {profile && (
+                    <div className="px-4 py-2 border-b border-t border-gray-700">
+                      <p className="text-sm text-white">Account Type</p>
+                      {profile.role === 'author' ? (
+                        <div className="mt-1">
+                          <div className="flex items-center justify-between bg-primary text-white text-xs px-3 py-2 rounded">
+                            <span className="font-medium">Author</span>
+                            {/* <span className="text-xs opacity-75">(Permanent)</span> */}
                           </div>
+                          {/* <p className="text-xs text-gray-400 mt-1">Authors cannot revert to reader role</p> */}
+                        </div>
+                      ) : (
+                        <div className="flex mt-1 space-x-2">
+                          <button
+                            onClick={() => updateRole('reader')}
+                            className={`text-xs px-2 py-1 rounded ${profile.role === 'reader' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                          >
+                            Reader
+                          </button>
+                          <button
+                            onClick={() => updateRole('author')}
+                            className={`text-xs px-2 py-1 rounded ${profile.role === 'author' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                          >
+                            Author
+                          </button>
                         </div>
                       )}
+                    </div>
+                  )}
 
-                    {/* Author's Suit - only visible for authors */}
-                    {profile && profile.role === 'author' && (
-                      <Link 
-                        href="/author-dashboard"
-                        className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#303030] transition-colors border-b border-gray-700"
-                      >
-                        <div className="flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                          </svg>
-                          Author's Suit
-                        </div>
-                      </Link>
-                    )}
+                  {/* Author's Suit - only visible for authors */}
+                  {profile && profile.role === 'author' && (
+                    <Link
+                      href="/author-dashboard"
+                      className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#303030] transition-colors border-b border-gray-700"
+                    >
+                      <div className="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        Author's Suit
+                      </div>
+                    </Link>
+                  )}
 
-
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#303030] transition-colors"
-                >
-                  Sign Out
-                </button>
-              </div>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#303030] transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </div>
               )}
             </div>
           ) : (
@@ -245,7 +253,7 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
       </div>
     </header>
   );
-};
+}
 
 const Header: React.FC<HeaderProps> = (props) => {
   return (

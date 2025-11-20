@@ -40,10 +40,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
   const handleWriteWithAI = async () => {
     try {
       if (!editor) return;
-      
+
       // Get current content
       const content = editor.getHTML();
-      
+
       if (!content.trim()) {
         alert("Please add some content before using AI rewrite");
         return;
@@ -52,13 +52,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
       // Show loading state
       setIsRewriting(true);
       editor.setEditable(false);
-      
+
       // Call the Gemini API to rewrite the content
       const rewrittenContent = await rewriteAsStory(content);
-      
+
       // Update the editor with the rewritten content
       editor.commands.setContent(rewrittenContent);
-      
+
       // Re-enable editing
       editor.setEditable(true);
     } catch (error) {
@@ -202,7 +202,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
   const [tagsInput, setTagsInput] = useState('');
   const [tagsError, setTagsError] = useState<string>('');
   const [thumbnail, setThumbnail] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);  
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -217,22 +217,22 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
   const handleThumbnailChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
+
       // Validate file type
       if (!file.type.includes('image/')) {
         setError('Please select an image file');
         return;
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError('Image size should be less than 5MB');
         return;
       }
-      
+
       setThumbnail(file);
       setError(null);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -241,7 +241,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
       reader.readAsDataURL(file);
     }
   };
-  
+
   // Generate concise summary with AI
   const handleGenerateConciseSummary = async () => {
     if (!description.trim()) {
@@ -249,17 +249,17 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
       setError('Please enter a book description first');
       return;
     }
-    
+
     try {
       setGeneratingSummary(true);
       setError(null);
-      
+
       // Generate concise summary using Gemini API
       const summary = await generateConciseSummary(description);
-      
+
       // Set the concise summary
       setConciseSummary(summary);
-      
+
     } catch (err: any) {
       console.error('Error generating concise summary:', err);
       setError(`Failed to generate summary: ${err.message || 'Please try again.'}`);
@@ -267,30 +267,30 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
       setGeneratingSummary(false);
     }
   };
-  
+
   // Generate thumbnail with AI
   const [generatingImage, setGeneratingImage] = useState(false);
-  
+
   const handleGenerateAIThumbnail = async () => {
     if (!conciseSummary.trim()) {
       setError('Please generate a concise summary first');
       return;
     }
-    
+
     try {
       setGeneratingImage(true);
       setError(null);
-      
+
       // Generate image using Gemini API with the concise summary as prompt
       const imageDataUrl = await generateImageFromPrompt(conciseSummary);
-      
+
       // Convert data URL to File object
       const file = dataUrlToFile(imageDataUrl, `ai-generated-${Date.now()}.png`);
-      
+
       // Set as thumbnail
       setThumbnail(file);
       setThumbnailPreview(imageDataUrl);
-      
+
     } catch (err: any) {
       console.error('Error generating AI image:', err);
       setError(`Failed to generate image: ${err.message || 'Please try again.'}`);
@@ -322,7 +322,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       setContent(html);
-      
+
       if (publishMode === 'single' && !html.trim()) {
         setContentError('Content is required for single-chapter books');
       } else {
@@ -332,14 +332,14 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
     // Fix SSR hydration issues
     immediatelyRender: false,
   });
-  
+
   // Set editor loaded state when editor is ready
   useEffect(() => {
     if (editor) {
       setEditorLoaded(true);
     }
   }, [editor]);
-  
+
   // Disable/enable editor when uploading status changes
   useEffect(() => {
     if (editor) {
@@ -350,7 +350,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
   // Handle chapters change
   const handleChaptersChange = (updatedChapters: Chapter[]) => {
     setChapters(updatedChapters);
-    
+
     if (publishMode === 'episodes' && updatedChapters.length === 0) {
       setChaptersError('At least one episode is required');
     } else {
@@ -361,7 +361,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
   // Handle publish mode change
   const handlePublishModeChange = (mode: 'single' | 'episodes') => {
     setPublishMode(mode);
-    
+
     // Reset validation errors based on new mode
     if (mode === 'single') {
       setChaptersError('');
@@ -378,13 +378,13 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     // Validate user is logged in
     if (!user) {
       setError('You must be logged in to create a book');
       return;
     }
-    
+
     // Validate required fields
     if (!title.trim()) {
       setTitleError('Title is required');
@@ -393,7 +393,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
     } else {
       setTitleError('');
     }
-    
+
     if (!author.trim()) {
       setAuthorError('Author is required');
       setError('Please enter an author name');
@@ -401,7 +401,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
     } else {
       setAuthorError('');
     }
-    
+
     if (!description.trim()) {
       setDescriptionError('Book description is required');
       setError('Please enter a book description/summary');
@@ -409,7 +409,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
     } else {
       setDescriptionError('');
     }
-    
+
     if (publishMode === 'single' && !content.trim()) {
       setContentError('Content is required');
       setError('Please enter book content');
@@ -425,7 +425,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
     } else {
       setChaptersError('');
     }
-    
+
     if (!tagsInput.trim()) {
       setTagsError('At least one tag is required');
       setError('Please add at least one tag');
@@ -433,30 +433,30 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
     } else {
       setTagsError('');
     }
-    
+
     if (!thumbnail) {
       setError('Please upload a thumbnail image');
       return;
     }
-    
+
     try {
       setUploading(true);
       setError(null);
-      
+
       // Upload thumbnail first
       const thumbnailUrl = await uploadBookThumbnail(thumbnail, (progress) => {
         setUploadProgress(progress);
       });
-      
+
       // Process tags (split by commas and trim)
       const tags = tagsInput
         .split(',')
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
-      
+
       // Prepare chapters data
       let finalChapters: Chapter[] = [];
-      
+
       if (publishMode === 'single') {
         // For single mode, create one chapter with the main content
         finalChapters = [{
@@ -477,7 +477,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
             audioUrl: chapter.audioUrl || '' // Ensure audioUrl is never undefined
           }));
       }
-      
+
       // Create book document
       const bookData: Omit<BookDocument, 'id' | 'createdAt' | 'lastUpdated'> = {
         title: title.trim(),
@@ -490,16 +490,16 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
         chapters: finalChapters,
         audioUrl: audioUrl || '' // Ensure audioUrl is never undefined
       };
-      
+
       const result = await createBook(bookData);
-      
+
       console.log('Book created successfully:', result);
-      
+
       // Store the book ID for audio narration
       if (result.id) {
         setBookId(result.id);
       }
-      
+
       // Reset form
       setTitle('');
       setContent('');
@@ -510,12 +510,12 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
       setThumbnailPreview(null);
       setUploadProgress(0);
       setChapters([]);
-      
+
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
       }
-      
+
     } catch (err: any) {
       console.error('Error creating book:', err);
       setError(`Failed to create book: ${err.message || 'Please try again.'}`);
@@ -527,13 +527,13 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-[#1F1F1F] rounded-lg shadow-md text-white">
       <h2 className="text-2xl font-bold mb-6">Write a New Book</h2>
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-900 border border-red-700 text-white rounded">
           {error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         {/* Title */}
         <div className="mb-4">
@@ -552,7 +552,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
           />
           {titleError && <p className="text-red-500 text-sm mt-1">{titleError}</p>}
         </div>
-        
+
         {/* Author */}
         <div className="mb-4">
           <label htmlFor="author" className="block text-sm font-medium text-gray-300 mb-1">
@@ -570,7 +570,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
           />
           {authorError && <p className="text-red-500 text-sm mt-1">{authorError}</p>}
         </div>
-        
+
         {/* Description */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
@@ -611,7 +611,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
             required
           />
           {descriptionError && <p className="text-red-500 text-sm mt-1">{descriptionError}</p>}
-          
+
           {/* Concise Summary Display */}
           {conciseSummary && (
             <div className="mt-2 p-3 bg-[#2a2a2a] border border-[#5A3E85] rounded-md">
@@ -622,7 +622,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
             </div>
           )}
         </div>
-        
+
         {/* Tags */}
         <div className="mb-4">
           <label htmlFor="tags" className="block text-sm font-medium text-gray-300 mb-1">
@@ -640,7 +640,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
           />
           {tagsError && <p className="text-red-500 text-sm mt-1">{tagsError}</p>}
         </div>
-        
+
         {/* Thumbnail */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -681,27 +681,27 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
             />
             <span className="text-sm text-gray-400">
               {thumbnail ? (
-                thumbnail.name.startsWith('ai-generated') 
-                  ? 'AI-generated image' 
+                thumbnail.name.startsWith('ai-generated')
+                  ? 'AI-generated image'
                   : thumbnail.name
               ) : 'No file selected'}
             </span>
           </div>
-          
+
           {/* Thumbnail Preview */}
           {thumbnailPreview && (
             <div className="mt-4 flex justify-center">
               <div className="relative aspect-[9/16] h-60 border border-gray-300 rounded overflow-hidden">
-                <img 
-                  src={thumbnailPreview} 
-                  alt="Thumbnail preview" 
-                  className="absolute inset-0 w-full h-full object-cover" 
+                <img
+                  src={thumbnailPreview}
+                  alt="Thumbnail preview"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
               </div>
             </div>
           )}
         </div>
-        
+
         {/* Publishing Mode Selection */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -734,7 +734,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
             </div>
           </div>
         </div>
-        
+
         {/* Content - Show only in single mode */}
         {publishMode === 'single' && (
           <div className="mb-6">
@@ -742,10 +742,10 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
               <label htmlFor="content" className="block text-sm font-medium text-gray-300">
                 Book Content *
               </label>
-              
+
               {/* Audio Narration Button */}
               {content && (
-                <EnhancedAudioNarrationButton 
+                <EnhancedAudioNarrationButton
                   text={content.replace(/<[^>]*>/g, ' ')} // Strip HTML tags for narration
                   bookId={bookId || undefined}
                   onSuccess={(url) => setAudioUrl(url)}
@@ -753,7 +753,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
                 />
               )}
             </div>
-            
+
             {/* Tiptap Editor */}
             <div className="border border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-primary overflow-hidden">
               {!editorLoaded ? (
@@ -769,7 +769,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
             </div>
             <p className="text-xs text-gray-400 mt-1">Use the toolbar to format your content</p>
             {contentError && <p className="text-red-500 text-sm mt-1">{contentError}</p>}
-            
+
             {/* Audio Preview */}
             {audioUrl && (
               <div className="mt-3">
@@ -782,32 +782,32 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
             )}
           </div>
         )}
-        
+
         {/* Chapters Manager - Show only in episodes mode */}
         {publishMode === 'episodes' && (
           <div className="mb-6">
-            <ChaptersManager 
-              chapters={chapters} 
+            <ChaptersManager
+              chapters={chapters}
               onChange={handleChaptersChange}
               bookId={bookId || undefined}
             />
             {chaptersError && <p className="text-red-500 text-sm mt-1">{chaptersError}</p>}
           </div>
         )}
-        
+
         {/* Upload Progress */}
         {uploading && (
           <div className="mb-4">
             <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div 
-                className="bg-primary h-2.5 rounded-full" 
+              <div
+                className="bg-primary h-2.5 rounded-full"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
             </div>
             <p className="text-sm text-gray-400 mt-1">{Math.round(uploadProgress)}% uploaded</p>
           </div>
         )}
-        
+
         {/* Submit Button */}
         <button
           type="submit"
