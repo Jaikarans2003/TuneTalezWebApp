@@ -22,6 +22,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import ChaptersManager from './ChaptersManager';
 import EnhancedAudioNarrationButton from './EnhancedAudioNarrationButton';
 import { generateImageFromPrompt, generateConciseSummary, dataUrlToFile, rewriteAsStory } from '@/services/gemini';
+import { useAuth } from '@/context/AuthContext';
 
 interface BookFormProps {
   onSuccess?: () => void;
@@ -186,6 +187,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
 }
 
 const BookForm = ({ onSuccess }: BookFormProps) => {
+  const { user } = useAuth();
   const [title, setTitle] = useState('');
   const [titleError, setTitleError] = useState<string>('');
   const [content, setContent] = useState<string>('');
@@ -377,6 +379,12 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
+    // Validate user is logged in
+    if (!user) {
+      setError('You must be logged in to create a book');
+      return;
+    }
+    
     // Validate required fields
     if (!title.trim()) {
       setTitleError('Title is required');
@@ -476,6 +484,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
         content: publishMode === 'single' ? content.trim() : '', // Only use content for single mode
         description: description.trim(), // Book summary/description
         author: author.trim(),
+        authorId: user.uid, // Add the current user's ID as authorId
         tags,
         thumbnailUrl,
         chapters: finalChapters,

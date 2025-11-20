@@ -2,9 +2,7 @@
 
 import React, { useState, useRef, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { UserProfile } from '@/firebase/services';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Logo from './Logo';
 
@@ -146,6 +144,19 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
         {/* Right section - Sign in button or User profile */}
         <div className="flex items-center space-x-4">
           
+          {/* Upload button for authors */}
+          {user && profile?.role === 'author' && (
+            <Link 
+              href="/author-dashboard" 
+              className="bg-primary hover:bg-primary-dark text-white py-1 px-4 rounded-full flex items-center transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+            
+            </Link>
+          )}
+          
           {user ? (
             <div className="relative" ref={dropdownRef}>
               <button 
@@ -174,25 +185,45 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
                 >
                   View Profile
                 </Link>
-                {/* {profile && (
-                  <div className="px-4 py-2 border-b border-t border-gray-700">
-                    <p className="text-sm text-white">Account Type</p>
-                    <div className="flex mt-1 space-x-2">
-                      <button 
-                        onClick={() => updateRole('reader')}
-                        className={`text-xs px-2 py-1 rounded ${profile.role === 'reader' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+
+                    {/* Reader and Author Toggle Button */}
+                      {profile && (
+                        <div className="px-4 py-2 border-b border-t border-gray-700">
+                          <p className="text-sm text-white">Account Type</p>
+                          <div className="flex mt-1 space-x-2">
+                            <button 
+                              onClick={() => updateRole('reader')}
+                              disabled={profile.role === 'author'}
+                              className={`text-xs px-2 py-1 rounded ${profile.role === 'reader' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'} ${profile.role === 'author' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                              Reader
+                            </button>
+                            <button 
+                              onClick={() => updateRole('author')}
+                              className={`text-xs px-2 py-1 rounded ${profile.role === 'author' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
+                            >
+                              Author
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Author's Suit - only visible for authors */}
+                    {profile && profile.role === 'author' && (
+                      <Link 
+                        href="/author-dashboard"
+                        className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#303030] transition-colors border-b border-gray-700"
                       >
-                        Reader
-                      </button>
-                      <button 
-                        onClick={() => updateRole('author')}
-                        className={`text-xs px-2 py-1 rounded ${profile.role === 'author' ? 'bg-primary text-white' : 'bg-gray-700 text-gray-300'}`}
-                      >
-                        Author
-                      </button>
-                    </div>
-                  </div>
-                )} */}
+                        <div className="flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                          </svg>
+                          Author's Suit
+                        </div>
+                      </Link>
+                    )}
+
+
                 <button
                   onClick={handleLogout}
                   className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#303030] transition-colors"

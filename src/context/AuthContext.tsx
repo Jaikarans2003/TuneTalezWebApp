@@ -51,6 +51,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               photoURL: user.photoURL || undefined,
               role: 'reader'
             });
+            console.log('Created new user profile with reader role for user:', user.uid);
+          } else {
+            console.log('Found existing user profile with role:', userProfile.role, 'for user:', user.uid);
           }
           
           setProfile(userProfile);
@@ -86,16 +89,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, profile]);
 
   const logout = async () => {
+    console.log('Logging out user with role:', profile?.role);
     await signOut();
+    console.log('User logged out successfully');
   };
 
   const updateRole = async (role: 'reader' | 'author' | 'admin') => {
-    if (user) {
+    if (user && profile) {
+      // Prevent role downgrade from author to reader
+      if (profile.role === 'author' && role === 'reader') {
+        alert('Cannot downgrade from author to reader. Once you become an author, you cannot revert to reader.');
+        return;
+      }
+      
+      console.log('Attempting to update role from', profile.role, 'to', role, 'for user:', user.uid);
       await updateUserRole(user.uid, role);
       // Update local profile state
       setProfile(prev => prev ? { ...prev, role } : null);
       // Update admin status if role changed
       setIsAdmin(role === 'admin');
+      console.log('Role updated successfully to', role);
     }
   };
 

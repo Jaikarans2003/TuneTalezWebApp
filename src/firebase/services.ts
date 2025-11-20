@@ -82,6 +82,18 @@ export const updateUserProfile = async (uid: string, updates: Partial<Omit<UserP
 export const updateUserRole = async (uid: string, role: 'user' | 'admin' | 'reader' | 'author') => {
   try {
     const userRef = doc(db, 'users', uid);
+    
+    // Get current user profile to check for role downgrade
+    const currentDoc = await getDoc(userRef);
+    if (currentDoc.exists()) {
+      const currentRole = currentDoc.data().role;
+      
+      // Prevent role downgrade from author to reader
+      if (currentRole === 'author' && role === 'reader') {
+        throw new Error('Cannot downgrade an author to reader. Once a user becomes an author, they cannot revert to reader.');
+      }
+    }
+    
     await updateDoc(userRef, { role });
     
     // Get the updated user profile
@@ -274,6 +286,7 @@ export interface BookDocument {
   description: string; // Summary/description of the book
   displayDescription?: boolean; // Whether to display description on book page
   author: string;
+  authorId: string; // Firebase Auth UID of the author
   tags: string[];
   thumbnailUrl: string;
   createdAt: number;
@@ -311,6 +324,7 @@ export const createBook = async (book: Omit<BookDocument, 'id' | 'createdAt' | '
       content: book.content || '',
       description: book.description || '',
       author: book.author,
+      authorId: book.authorId, // Include authorId field
       tags: book.tags || [],
       thumbnailUrl: book.thumbnailUrl,
       audioUrl: book.audioUrl || '',

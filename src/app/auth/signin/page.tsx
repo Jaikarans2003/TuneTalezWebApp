@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { signIn, signUp, signInWithGoogle } from '@/firebase/auth';
-import { createUserProfile } from '@/firebase/services';
+import { createUserProfile, getUserProfile } from '@/firebase/services';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
@@ -24,16 +24,26 @@ export default function SignInPage() {
       if (isSignUp) {
         // Sign up the user
         const userCredential = await signUp(email, password);
-        // Create a user profile with default role 'reader'
-        await createUserProfile({
-          uid: userCredential.user.uid,
-          email: userCredential.user.email || '',
-          displayName: displayName || userCredential.user.displayName || '', // Use provided display name or empty string
-          photoURL: userCredential.user.photoURL || '',       // Use empty string instead of undefined
-          role: 'reader'
-        });
+        
+        // Check if profile already exists (shouldn't happen for new sign-ups, but good to check)
+        const existingProfile = await getUserProfile(userCredential.user.uid);
+        if (!existingProfile) {
+          // Create a user profile with default role 'reader' only if no profile exists
+          await createUserProfile({
+            uid: userCredential.user.uid,
+            email: userCredential.user.email || '',
+            displayName: displayName || userCredential.user.displayName || '', // Use provided display name or empty string
+            photoURL: userCredential.user.photoURL || '',       // Use empty string instead of undefined
+            role: 'reader'
+          });
+          console.log('Created new user profile with reader role for new user:', userCredential.user.uid);
+        } else {
+          console.log('User profile already exists for new user:', userCredential.user.uid, 'with role:', existingProfile.role);
+        }
       } else {
+        // For sign-in, just sign in - don't create/modify profile
         await signIn(email, password);
+        console.log('User signed in with email/password');
       }
       setLoading(false);
       
@@ -58,14 +68,22 @@ export default function SignInPage() {
       // Sign in with Google
       const userCredential = await signInWithGoogle();
       
-      // Create a user profile with default role 'reader' if it's a new user
-      await createUserProfile({
-        uid: userCredential.user.uid,
-        email: userCredential.user.email || '',
-        displayName: userCredential.user.displayName || undefined,
-        photoURL: userCredential.user.photoURL || undefined,
-        role: 'reader'
-      });
+      // Check if profile already exists
+      const existingProfile = await getUserProfile(userCredential.user.uid);
+      if (!existingProfile) {
+        // Create a user profile with default role 'reader' only if no profile exists
+        await createUserProfile({
+          uid: userCredential.user.uid,
+          email: userCredential.user.email || '',
+          displayName: userCredential.user.displayName || undefined,
+          photoURL: userCredential.user.photoURL || undefined,
+          role: 'reader'
+        });
+        console.log('Created new user profile with reader role for Google user:', userCredential.user.uid);
+      } else {
+        console.log('User profile already exists for Google user:', userCredential.user.uid, 'with role:', existingProfile.role);
+      }
+      
       setLoading(false);
       
       router.push('/profile');
