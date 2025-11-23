@@ -13,7 +13,7 @@ function HomeContent() {
   const [books, setBooks] = useState<BookDocument[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<BookDocument[]>([]);
   const [filteredPdfs, setFilteredPdfs] = useState<PdfDocument[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   

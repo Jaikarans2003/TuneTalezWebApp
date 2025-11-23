@@ -187,16 +187,16 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
                   </Link>
 
                   {/* Reader and Author Toggle Button */}
-                  {profile && (
+                  {/* {profile && (
                     <div className="px-4 py-2 border-b border-t border-gray-700">
                       <p className="text-sm text-white">Account Type</p>
                       {profile.role === 'author' ? (
                         <div className="mt-1">
                           <div className="flex items-center justify-between bg-primary text-white text-xs px-3 py-2 rounded">
                             <span className="font-medium">Author</span>
-                            {/* <span className="text-xs opacity-75">(Permanent)</span> */}
+                            <span className="text-xs opacity-75">(Permanent)</span>
                           </div>
-                          {/* <p className="text-xs text-gray-400 mt-1">Authors cannot revert to reader role</p> */}
+                          <p className="text-xs text-gray-400 mt-1">Authors cannot revert to reader role</p>
                         </div>
                       ) : (
                         <div className="flex mt-1 space-x-2">
@@ -215,10 +215,10 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
                         </div>
                       )}
                     </div>
-                  )}
+                  )} */}
 
                   {/* Author's Suit - only visible for authors */}
-                  {profile && profile.role === 'author' && (
+                  {/* {profile && profile.role === 'author' && (
                     <Link
                       href="/author-dashboard"
                       className="block w-full text-left px-4 py-2 text-sm text-white hover:bg-[#303030] transition-colors border-b border-gray-700"
@@ -230,7 +230,7 @@ function HeaderContent({ isOpen, setIsOpen }: HeaderProps) {
                         Author's Suit
                       </div>
                     </Link>
-                  )}
+                  )} */}
 
                   <button
                     onClick={handleLogout}

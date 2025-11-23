@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signIn, signUp, signInWithGoogle } from '@/firebase/auth';
 import { createUserProfile, getUserProfile } from '@/firebase/services';
 
-export default function SignInPage() {
+function SignInContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -14,17 +14,21 @@ export default function SignInPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get redirect URL from query parameter
+  const redirectUrl = searchParams?.get('redirect') || '/profile';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
+
     try {
       if (isSignUp) {
         // Sign up the user
         const userCredential = await signUp(email, password);
-        
+
         // Check if profile already exists (shouldn't happen for new sign-ups, but good to check)
         const existingProfile = await getUserProfile(userCredential.user.uid);
         if (!existingProfile) {
@@ -46,8 +50,9 @@ export default function SignInPage() {
         console.log('User signed in with email/password');
       }
       setLoading(false);
-      
-      router.push('/profile');
+
+      // Redirect to the specified URL or default to profile
+      router.push(redirectUrl);
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential') {
         setError('Invalid email or password. Please try again.');
@@ -63,11 +68,11 @@ export default function SignInPage() {
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
-    
+
     try {
       // Sign in with Google
       const userCredential = await signInWithGoogle();
-      
+
       // Check if profile already exists
       const existingProfile = await getUserProfile(userCredential.user.uid);
       if (!existingProfile) {
@@ -83,13 +88,14 @@ export default function SignInPage() {
       } else {
         console.log('User profile already exists for Google user:', userCredential.user.uid, 'with role:', existingProfile.role);
       }
-      
+
       setLoading(false);
-      
-      router.push('/profile');
+
+      // Redirect to the specified URL or default to profile
+      router.push(redirectUrl);
     } catch (err: any) {
       console.error('Google sign in error:', err);
-      
+
       // Provide more specific error messages
       if (err.code === 'auth/unauthorized-domain') {
         setError('This domain is not authorized for authentication. Please try again later or contact support.');
@@ -97,10 +103,10 @@ export default function SignInPage() {
         setError('Sign-in was cancelled. Please try again.');
       } else if (err.code === 'auth/popup-blocked') {
         setError('Sign-in popup was blocked by your browser. Please enable popups for this site.');
-      } else{
+      } else {
         setError(err.message || 'Google authentication failed');
       }
-      
+
       setLoading(false);
     }
   };
@@ -143,7 +149,7 @@ export default function SignInPage() {
               />
             </div>
           )}
-          
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
               Email Address
@@ -222,5 +228,27 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="bg-[#1F1F1F] p-8 rounded-lg shadow-lg max-w-md w-full">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-700 rounded w-3/4 mx-auto mb-4"></div>
+            <div className="h-4 bg-gray-700 rounded w-1/2 mx-auto mb-8"></div>
+            <div className="space-y-4">
+              <div className="h-10 bg-gray-700 rounded"></div>
+              <div className="h-10 bg-gray-700 rounded"></div>
+              <div className="h-10 bg-gray-700 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <SignInContent />
+    </Suspense>
   );
 }
