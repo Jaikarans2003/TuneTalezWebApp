@@ -19,9 +19,9 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
-  logout: async () => {},
-  updateRole: async () => {},
-  updateProfile: async () => {},
+  logout: async () => { },
+  updateRole: async () => { },
+  updateProfile: async () => { },
   isAdmin: false,
 });
 
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           // Try to get existing profile
           let userProfile = await getUserProfile(user.uid);
-          
+
           // If no profile exists, create one with default role 'reader'
           if (!userProfile) {
             // Convert Firebase User to UserProfile format
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           } else {
             console.log('Found existing user profile with role:', userProfile.role, 'for user:', user.uid);
           }
-          
+
           setProfile(userProfile);
         } catch (error) {
           console.error('Error fetching user profile:', error);
@@ -101,7 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         alert('Cannot downgrade from author to reader. Once you become an author, you cannot revert to reader.');
         return;
       }
-      
+
       console.log('Attempting to update role from', profile.role, 'to', role, 'for user:', user.uid);
       await updateUserRole(user.uid, role);
       // Update local profile state
@@ -122,14 +122,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      profile, 
-      loading, 
-      logout, 
+    <AuthContext.Provider value={{
+      user,
+      profile,
+      loading,
+      logout,
       updateRole,
       updateProfile,
-      isAdmin 
+      isAdmin
     }}>
       {children}
     </AuthContext.Provider>

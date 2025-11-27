@@ -48,7 +48,7 @@ try {
     ffmpegAvailable = false;
   } else {
     // Only check FFmpeg availability in development
-    ffmpegImport.getAvailableFormats(function(err, formats) {
+    ffmpegImport.getAvailableFormats(function (err, formats) {
       if (err) {
         console.log('FFmpeg not available - will use fallback methods');
         ffmpegAvailable = false;
@@ -73,19 +73,19 @@ function ensureDirectoryExists(outputPath: string): void {
   try {
     // Handle both forward and backward slashes
     const lastSlashIndex = Math.max(
-      outputPath.lastIndexOf('/'), 
+      outputPath.lastIndexOf('/'),
       outputPath.lastIndexOf('\\')
     );
-    
+
     if (lastSlashIndex === -1) {
       console.log(`No directory part in path: ${outputPath}, using current directory`);
       // No directory part, file is in current directory
       return;
     }
-    
+
     const dir = outputPath.substring(0, lastSlashIndex);
     console.log(`Ensuring directory exists: ${dir}`);
-    
+
     if (!existsSync(dir)) {
       console.log(`Creating directory: ${dir}`);
       mkdirSync(dir, { recursive: true });
@@ -93,20 +93,20 @@ function ensureDirectoryExists(outputPath: string): void {
     } else {
       console.log(`Directory already exists: ${dir}`);
     }
-    
+
     // Verify the directory was created
     if (!existsSync(dir)) {
       throw new Error(`Failed to create directory: ${dir}`);
     }
   } catch (dirErr) {
     console.error(`Error creating directory for ${outputPath}:`, dirErr);
-    
+
     // Try a different approach
     try {
       const path = require('path');
       const dir = path.dirname(outputPath);
       console.log(`Trying alternative approach with path.dirname: ${dir}`);
-      
+
       if (!existsSync(dir)) {
         mkdirSync(dir, { recursive: true });
         console.log(`Directory created successfully with alternative approach: ${dir}`);
@@ -202,33 +202,33 @@ export async function extractParagraphMetadata(paragraphs: string[]): Promise<Pa
  * @returns Episode metadata
  */
 export async function extractEpisodeMetadata(
-  paragraphs: string[], 
+  paragraphs: string[],
   paragraphMetadata: ParagraphMetadata[],
   episodeNumber: number
 ): Promise<EpisodeMetadata> {
   // In a real implementation, this would analyze all paragraphs to determine the overall mood/genre
   // For this example, we'll use the most common mood and genre
-  
+
   // Count occurrences of each mood and genre
   const moodCounts: Record<string, number> = {};
   const genreCounts: Record<string, number> = {};
   let totalIntensity = 0;
-  
+
   paragraphMetadata.forEach(metadata => {
     // Count moods
     if (metadata.mood) {
       moodCounts[metadata.mood] = (moodCounts[metadata.mood] || 0) + 1;
     }
-    
+
     // Count genres
     if (metadata.genre) {
       genreCounts[metadata.genre] = (genreCounts[metadata.genre] || 0) + 1;
     }
-    
+
     // Sum intensities
     totalIntensity += metadata.intensity || 0;
   });
-  
+
   // Find the most common mood
   let dominantMood = 'Neutral';
   let maxMoodCount = 0;
@@ -238,7 +238,7 @@ export async function extractEpisodeMetadata(
       dominantMood = mood;
     }
   }
-  
+
   // Find the most common genre
   let dominantGenre = 'Fiction';
   let maxGenreCount = 0;
@@ -248,16 +248,16 @@ export async function extractEpisodeMetadata(
       dominantGenre = genre;
     }
   }
-  
+
   // Calculate average intensity
-  const averageIntensity = paragraphMetadata.length > 0 ? 
+  const averageIntensity = paragraphMetadata.length > 0 ?
     totalIntensity / paragraphMetadata.length : 0.5;
-  
+
   // Generate a title based on the first paragraph or a default
-  const title = paragraphs.length > 0 ? 
-    `Episode ${episodeNumber}: ${paragraphs[0].substring(0, 20)}...` : 
+  const title = paragraphs.length > 0 ?
+    `Episode ${episodeNumber}: ${paragraphs[0].substring(0, 20)}...` :
     `Episode ${episodeNumber}`;
-  
+
   return {
     episodeNumber,
     title,
@@ -281,23 +281,23 @@ export async function generateTTSAudio(
 ): Promise<string> {
   try {
     console.log(`Generating TTS audio for text: "${text.substring(0, 50)}..."`);
-    
+
     // Ensure directory exists using our helper function
     ensureDirectoryExists(outputPath);
-    
+
     // Check if ffmpeg is available
     if (!ffmpegAvailable) {
       console.warn('FFmpeg not available, using fallback audio generation');
       return await generateFallbackAudio(text, outputPath);
     }
-    
+
     // In a real implementation, this would call OpenAI's TTS API
     // For this example, we'll use a simple ffmpeg command to generate a tone
-    
+
     // Generate a tone with varying pitch based on text length to simulate different narrations
     const pitch = 100 + (text.length % 10) * 50; // Vary pitch between 100-550Hz
     const duration = 2 + (text.length / 100); // Vary duration based on text length
-    
+
     try {
       await new Promise<void>((resolve, reject) => {
         ffmpeg()
@@ -319,7 +319,7 @@ export async function generateTTSAudio(
           })
           .run();
       });
-      
+
       return outputPath;
     } catch (ffmpegError) {
       console.error('FFmpeg error in generateTTSAudio:', ffmpegError);
@@ -340,21 +340,21 @@ export async function generateTTSAudio(
  */
 async function generateFallbackAudio(text: string, outputPath: string): Promise<string> {
   console.log('Using fallback audio generation method');
-  
+
   try {
     // Create a simple silent MP3 file using Node.js
     const fs = require('fs');
-    
+
     // Create a buffer with MP3 header data for a short silent audio
     // This is a very basic MP3 header for a silent audio file
     const silentMp3Header = Buffer.from([
       0xFF, 0xFB, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     ]);
-    
+
     // Write the buffer to the output file
     fs.writeFileSync(outputPath, silentMp3Header);
-    
+
     console.log(`Generated fallback silent audio at: ${outputPath}`);
     return outputPath;
   } catch (fallbackError) {
@@ -377,22 +377,22 @@ export async function fetchBackgroundMusic(
 ): Promise<string> {
   try {
     console.log(`Fetching background music for mood: ${mood}, intensity: ${intensity}`);
-    
+
     // Ensure directory exists using our helper function
     ensureDirectoryExists(outputPath);
-    
+
     // Check if ffmpeg is available
     if (!ffmpegAvailable) {
       console.warn('FFmpeg not available, using fallback background music generation');
       return await generateFallbackBackgroundMusic(mood, outputPath, intensity);
     }
-    
+
     // In a real implementation, this would fetch from a music library or API
     // For this example, we'll generate a simple tone with different frequency based on mood
-    
+
     const frequency = mood === 'Happy' ? 220 : 165; // A3 for happy, E3 for sad/calm
     const duration = 30; // 30 seconds of background music
-    
+
     try {
       await new Promise<void>((resolve, reject) => {
         ffmpeg()
@@ -414,7 +414,7 @@ export async function fetchBackgroundMusic(
           })
           .run();
       });
-      
+
       return outputPath;
     } catch (ffmpegError) {
       console.error('FFmpeg error in fetchBackgroundMusic:', ffmpegError);
@@ -440,21 +440,21 @@ async function generateFallbackBackgroundMusic(
   intensity: number = 0.5
 ): Promise<string> {
   console.log('Using fallback background music generation method');
-  
+
   try {
     // Create a simple silent MP3 file using Node.js
     const fs = require('fs');
-    
+
     // Create a buffer with MP3 header data for a short silent audio
     // This is a very basic MP3 header for a silent audio file
     const silentMp3Header = Buffer.from([
       0xFF, 0xFB, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     ]);
-    
+
     // Write the buffer to the output file
     fs.writeFileSync(outputPath, silentMp3Header);
-    
+
     console.log(`Generated fallback silent background music at: ${outputPath} (mood: ${mood}, intensity: ${intensity})`);
     return outputPath;
   } catch (fallbackError) {
@@ -485,16 +485,16 @@ export async function processAudioParagraph(
     console.warn('FFmpeg not available, using fallback audio processing');
     return generateFallbackProcessedAudio(narrationPath, backgroundMusicPath, outputPath);
   }
-  
+
   return new Promise((resolve, reject) => {
     console.log(`Processing paragraph audio with NO fades: ${narrationPath}`);
-    
+
     // Ensure directory exists using our helper function
     ensureDirectoryExists(outputPath);
-    
+
     // Only use background music volume
     const bgVolume = options.backgroundMusicVolume || DEFAULT_OPTIONS.backgroundMusicVolume;
-    
+
     // Helper function to clean up temporary files
     function cleanupFiles(files: string[]) {
       files.forEach(file => {
@@ -507,7 +507,7 @@ export async function processAudioParagraph(
         }
       });
     }
-    
+
     // STEP 1: Get narration duration
     ffmpeg.ffprobe(narrationPath, (err, metadata) => {
       if (err) {
@@ -515,116 +515,135 @@ export async function processAudioParagraph(
         reject(err);
         return;
       }
-      
+
       const narrationDuration = metadata.format.duration || 0;
       console.log(`Narration duration: ${narrationDuration} seconds`);
-      
-      // STEP 2: Trim background music to exact narration length
-      const trimmedMusicPath = join(tmpdir(), `trimmed_music_${Date.now()}.mp3`);
-      
-      ffmpeg()
-        .input(backgroundMusicPath)
-        // Strict trim to exact narration duration
-        .outputOptions('-t', `${narrationDuration}`)
-        .output(trimmedMusicPath)
-        .on('end', () => {
-          console.log(`Trimmed background music to exactly ${narrationDuration}s`);
-          
-          // STEP 3: Adjust background music volume
-          const volumeAdjustedMusicPath = join(tmpdir(), `volume_adjusted_music_${Date.now()}.mp3`);
-          
-          ffmpeg()
-            .input(trimmedMusicPath)
-            // Adjust volume with no fades
-            .audioFilters(`volume=${bgVolume}`)
-            .output(volumeAdjustedMusicPath)
-            .on('end', () => {
-              console.log(`Adjusted background music volume to ${bgVolume}`);
-              
-              // STEP 4: Mix narration and background music with no filters
-              const mixedPath = join(tmpdir(), `mixed_${Date.now()}.mp3`);
-              
-              // Create a temporary WAV file for precise mixing
-              const tempWavPath = join(tmpdir(), `temp_mix_${Date.now()}.wav`);
-              
-              ffmpeg()
-                .input(narrationPath)
-                .input(volumeAdjustedMusicPath)
-                // Simple mixing with no filters, fades, or effects
-                .outputOptions('-filter_complex', `amix=inputs=2:duration=first`)
-                // Ensure exact duration
-                .outputOptions('-t', `${narrationDuration}`)
-                .outputOptions('-ar', '44100')
-                // Output to WAV for precise timing
-                .outputFormat('wav')
-                .output(tempWavPath)
-                .on('end', () => {
-                  console.log(`Created temporary WAV mix`);
-                  
-                  // Apply hard cut at exact duration
-                  ffmpeg()
-                    .input(tempWavPath)
-                    // Hard cut at exact duration
-                    .outputOptions('-ss', '0')
-                    .outputOptions('-t', `${narrationDuration}`)
-                    .outputOptions('-af', 'apad=pad_len=0')  // Ensure no padding
-                    .outputOptions('-ar', '44100')
-                    .outputOptions('-b:a', '128k')
-                    .output(mixedPath)
-                    .on('end', () => {
-                      console.log(`Applied hard cut with NO fades`);
-                      
-                      // STEP 5: Verify and copy to output
-                      ffmpeg.ffprobe(mixedPath, (probeErr, mixedMetadata) => {
-                        if (!probeErr && mixedMetadata) {
-                          const mixedDuration = mixedMetadata.format.duration || 0;
-                          console.log(`Final mixed audio duration: ${mixedDuration}s (expected: ${narrationDuration}s)`);
-                        }
-                        
-                        // Copy to output
-                        const outputStream = createWriteStream(outputPath);
-                        const inputStream = createReadStream(mixedPath);
-                        
-                        inputStream.pipe(outputStream);
-                        inputStream.on('end', () => {
-                          console.log(`Successfully copied mixed audio to output path`);
-                          cleanupFiles([trimmedMusicPath, volumeAdjustedMusicPath, mixedPath, tempWavPath]);
-                          resolve(outputPath);
+
+      // STEP 2: Check background music duration and loop if necessary
+      ffmpeg.ffprobe(backgroundMusicPath, (bgErr, bgMetadata) => {
+        if (bgErr) {
+          console.error('Error getting background music duration:', bgErr);
+          reject(bgErr);
+          return;
+        }
+
+        const bgDuration = bgMetadata.format.duration || 0;
+        console.log(`Background music duration: ${bgDuration} seconds`);
+
+        // STEP 3: Loop and trim background music to exact narration length
+        const trimmedMusicPath = join(tmpdir(), `trimmed_music_${Date.now()}.mp3`);
+
+        // Always enable infinite looping for background music to ensure it never runs out
+        // This handles cases where ffprobe duration might be slightly off (VBR) or music is just slightly shorter
+        // -stream_loop -1 must be applied as an input option BEFORE the input file
+        const ffmpegCommand = ffmpeg();
+        ffmpegCommand.inputOptions(['-stream_loop', '-1']);
+        ffmpegCommand.input(backgroundMusicPath);
+
+        console.log('Applied -stream_loop -1 for robust infinite looping');
+
+        ffmpegCommand
+          .outputOptions('-t', `${narrationDuration}`)
+          .output(trimmedMusicPath)
+          .on('end', () => {
+            console.log(`Looped (if needed) and trimmed background music to exactly ${narrationDuration}s`);
+
+            // STEP 3: Adjust background music volume
+            const volumeAdjustedMusicPath = join(tmpdir(), `volume_adjusted_music_${Date.now()}.mp3`);
+
+            ffmpeg()
+              .input(trimmedMusicPath)
+              // Adjust volume with no fades
+              .audioFilters(`volume=${bgVolume}`)
+              .output(volumeAdjustedMusicPath)
+              .on('end', () => {
+                console.log(`Adjusted background music volume to ${bgVolume}`);
+
+                // STEP 4: Mix narration and background music with no filters
+                const mixedPath = join(tmpdir(), `mixed_${Date.now()}.mp3`);
+
+                // Create a temporary WAV file for precise mixing
+                const tempWavPath = join(tmpdir(), `temp_mix_${Date.now()}.wav`);
+
+                ffmpeg()
+                  .input(narrationPath)
+                  .input(volumeAdjustedMusicPath)
+                  // Simple mixing with no filters, fades, or effects
+                  .outputOptions('-filter_complex', `amix=inputs=2:duration=first`)
+                  // Ensure exact duration
+                  .outputOptions('-t', `${narrationDuration}`)
+                  .outputOptions('-ar', '44100')
+                  // Output to WAV for precise timing
+                  .outputFormat('wav')
+                  .output(tempWavPath)
+                  .on('end', () => {
+                    console.log(`Created temporary WAV mix`);
+
+                    // Apply hard cut at exact duration
+                    ffmpeg()
+                      .input(tempWavPath)
+                      // Hard cut at exact duration
+                      .outputOptions('-ss', '0')
+                      .outputOptions('-t', `${narrationDuration}`)
+                      .outputOptions('-af', 'apad=pad_len=0')  // Ensure no padding
+                      .outputOptions('-ar', '44100')
+                      .outputOptions('-b:a', '128k')
+                      .output(mixedPath)
+                      .on('end', () => {
+                        console.log(`Applied hard cut with NO fades`);
+
+                        // STEP 5: Verify and copy to output
+                        ffmpeg.ffprobe(mixedPath, (probeErr, mixedMetadata) => {
+                          if (!probeErr && mixedMetadata) {
+                            const mixedDuration = mixedMetadata.format.duration || 0;
+                            console.log(`Final mixed audio duration: ${mixedDuration}s (expected: ${narrationDuration}s)`);
+                          }
+
+                          // Copy to output
+                          const outputStream = createWriteStream(outputPath);
+                          const inputStream = createReadStream(mixedPath);
+
+                          inputStream.pipe(outputStream);
+                          inputStream.on('end', () => {
+                            console.log(`Successfully copied mixed audio to output path`);
+                            cleanupFiles([trimmedMusicPath, volumeAdjustedMusicPath, mixedPath, tempWavPath]);
+                            resolve(outputPath);
+                          });
+
+                          inputStream.on('error', (copyErr: Error) => {
+                            console.error('Error copying mixed audio:', copyErr);
+                            cleanupFiles([trimmedMusicPath, volumeAdjustedMusicPath, mixedPath, tempWavPath]);
+                            reject(copyErr);
+                          });
                         });
-                        
-                        inputStream.on('error', (copyErr: Error) => {
-                          console.error('Error copying mixed audio:', copyErr);
-                          cleanupFiles([trimmedMusicPath, volumeAdjustedMusicPath, mixedPath, tempWavPath]);
-                          reject(copyErr);
-                        });
-                      });
-                    })
-                    .on('error', (hardCutErr: any) => {
-                      console.error('Error applying hard cut:', hardCutErr);
-                      cleanupFiles([trimmedMusicPath, volumeAdjustedMusicPath, tempWavPath]);
-                      reject(hardCutErr);
-                    })
-                    .run();
-                })
-                .on('error', (mixErr: any) => {
-                  console.error('Error mixing audio:', mixErr);
-                  cleanupFiles([trimmedMusicPath, volumeAdjustedMusicPath]);
-                  reject(mixErr);
-                })
-                .run();
-            })
-            .on('error', (volumeErr: any) => {
-              console.error('Error adjusting background music volume:', volumeErr);
-              cleanupFiles([trimmedMusicPath]);
-              reject(volumeErr);
-            })
-            .run();
-        })
-        .on('error', (trimErr: any) => {
-          console.error('Error trimming background music:', trimErr);
-          reject(trimErr);
-        })
-        .run();
+                      })
+                      .on('error', (hardCutErr: any) => {
+                        console.error('Error applying hard cut:', hardCutErr);
+                        cleanupFiles([trimmedMusicPath, volumeAdjustedMusicPath, tempWavPath]);
+                        reject(hardCutErr);
+                      })
+                      .run();
+                  })
+                  .on('error', (mixErr: any) => {
+                    console.error('Error mixing audio:', mixErr);
+                    cleanupFiles([trimmedMusicPath, volumeAdjustedMusicPath]);
+                    reject(mixErr);
+                  })
+                  .run();
+              })
+              .on('error', (volumeErr: any) => {
+                console.error('Error adjusting background music volume:', volumeErr);
+                cleanupFiles([trimmedMusicPath]);
+                reject(volumeErr);
+              })
+              .run();
+          })
+          .on('error', (trimErr: any) => {
+            console.error('Error trimming background music:', trimErr);
+            reject(trimErr);
+          })
+          .run();
+      });
     });
   });
 }
@@ -642,32 +661,32 @@ export async function concatenateAudioSegments(
   options: NarrationOptions = DEFAULT_OPTIONS
 ): Promise<string> {
   console.log(`Starting concatenation of ${segments.length} audio segments with pauses`);
-  
+
   if (segments.length === 1) {
     console.log(`Only one segment, copying directly to output`);
     // If there's only one segment, just copy it to the output path
     const inputStream = createReadStream(segments[0]);
     const outputStream = createWriteStream(outputPath);
-    
+
     await new Promise<void>((resolve, reject) => {
       inputStream.pipe(outputStream);
       inputStream.on('end', () => resolve());
       inputStream.on('error', reject);
     });
-    
+
     return outputPath;
   }
-  
+
   // Ensure directory exists using our helper function
   ensureDirectoryExists(outputPath);
-  
+
   try {
     // Create a silence file for the pause between segments
     const silenceDuration = 3; // 3 seconds pause between segments
     const silencePath = join(tmpdir(), `silence_${silenceDuration}s_${Date.now()}.mp3`);
-    
+
     console.log(`Generating ${silenceDuration} second silence file at ${silencePath}`);
-    
+
     // Generate silence file using ffmpeg
     await new Promise<void>((resolve, reject) => {
       ffmpeg()
@@ -689,13 +708,13 @@ export async function concatenateAudioSegments(
         })
         .run();
     });
-    
+
     // STEP 1: Create a single file with all segments concatenated with silence between them
     console.log(`Preparing concatenation with ${silenceDuration}s pauses between segments`);
-    
+
     // Create a concat file for ffmpeg
     const concatFilePath = join(tmpdir(), `concat_with_pauses_${Date.now()}.txt`);
-    
+
     // Create the content for the concat file, interleaving silence between segments
     const concatSegments: string[] = [];
     for (let i = 0; i < segments.length; i++) {
@@ -704,17 +723,17 @@ export async function concatenateAudioSegments(
         concatSegments.push(silencePath); // Add silence after every segment except the last
       }
     }
-    
+
     const concatLines = concatSegments.map(segment => `file '${segment}'`);
     const concatContent = concatLines.join('\n');
     require('fs').writeFileSync(concatFilePath, concatContent);
-    
+
     console.log(`Created concat file with ${concatSegments.length} entries (${segments.length} segments + ${segments.length - 1} silences)`);
     console.log(`Concat file content:\n${concatContent}`);
-    
+
     // STEP 2: Perform the concatenation
     console.log(`Performing concatenation with pauses`);
-    
+
     await new Promise<void>((resolve, reject) => {
       ffmpeg()
         .input(concatFilePath)
@@ -733,7 +752,7 @@ export async function concatenateAudioSegments(
         })
         .run();
     });
-    
+
     // Clean up temporary files
     try {
       unlinkSync(concatFilePath);
@@ -742,7 +761,7 @@ export async function concatenateAudioSegments(
     } catch (err) {
       console.warn(`Failed to delete temporary files:`, err);
     }
-    
+
     return outputPath;
   } catch (err) {
     console.error('Error in concatenateAudioSegments:', err);
@@ -759,7 +778,7 @@ export async function concatenateAudioSegments(
 async function generateParagraphSilence(duration: number, outputPath: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     console.log(`Generating precise silence of ${duration} seconds in WAV format`);
-    
+
     ffmpeg()
       .input('anullsrc=r=44100:cl=stereo')
       .inputOptions('-f', 'lavfi')
@@ -790,20 +809,20 @@ async function generateParagraphSilence(duration: number, outputPath: string): P
 export async function uploadAudioToFirebase(filePath: string, storagePath: string): Promise<string> {
   try {
     console.log(`Uploading audio file to R2 Storage: ${filePath} -> ${storagePath}`);
-    
+
     // Read the file
     const fileBuffer = require('fs').readFileSync(filePath);
-    
+
     // Import R2 services
     const { uploadFileToR2 } = await import('@/r2/services');
-    
+
     // Create a Blob from the file buffer
     const fileBlob = new Blob([fileBuffer]);
-    
+
     // Upload to R2
     const downloadURL = await uploadFileToR2(fileBlob, storagePath);
     console.log(`Download URL: ${downloadURL}`);
-    
+
     return downloadURL;
   } catch (error) {
     console.error('Error uploading audio to R2:', error);
@@ -822,21 +841,25 @@ export async function generateNarrationWithBackgroundMusic(
   text: string,
   bookId: string,
   options: NarrationOptions = DEFAULT_OPTIONS
-): Promise<{ paragraphUrls: string[], episodes: EpisodeAudio[] }> {
+): Promise<{
+  paragraphUrls: string[],
+  episodes: EpisodeAudio[],
+  paragraphs: Array<{ text: string, metadata: ParagraphMetadata }>
+}> {
   try {
     console.log(`Starting narration generation for book ${bookId} with SEPARATE FILES AND LONG SILENCES`);
-    
+
     // Create a temporary directory for processing with better error handling
     let tempDir;
     try {
       // Get the system's temporary directory
       const systemTmpDir = tmpdir();
       console.log(`System temporary directory: ${systemTmpDir}`);
-      
+
       // Create a unique subdirectory for this narration
       tempDir = join(systemTmpDir, `narration_${Date.now()}`);
       console.log(`Creating temporary directory at: ${tempDir}`);
-      
+
       // Check if the directory exists and create it if it doesn't
       if (!existsSync(tempDir)) {
         console.log(`Directory doesn't exist, creating it now...`);
@@ -845,30 +868,30 @@ export async function generateNarrationWithBackgroundMusic(
       } else {
         console.log(`Directory already exists`);
       }
-      
+
       // Verify the directory was created
       if (!existsSync(tempDir)) {
         throw new Error(`Failed to create temporary directory at ${tempDir}`);
       }
     } catch (err) {
       console.error(`Error creating temporary directory:`, err);
-      
+
       // Fallback to a directory in the current working directory
       console.log(`Trying fallback directory...`);
       tempDir = join(process.cwd(), 'temp', `narration_${Date.now()}`);
       console.log(`Fallback directory: ${tempDir}`);
-      
+
       // Create the fallback directory
       if (!existsSync(tempDir)) {
         mkdirSync(tempDir, { recursive: true });
         console.log(`Fallback directory created successfully`);
       }
     }
-    
+
     // Step 1: Split text into paragraphs using $ as the primary delimiter
     const paragraphs = text.split(/\$/).filter(p => p.trim().length > 0);
     console.log(`Split text into ${paragraphs.length} paragraphs using $ symbol as delimiter`);
-    
+
     // Fallback to double full stops (..) if no paragraphs found with $
     if (paragraphs.length <= 1 && text.length > 500) {
       console.log(`Only one paragraph found with $ symbol, trying double full stops (..) as fallback`);
@@ -878,42 +901,42 @@ export async function generateNarrationWithBackgroundMusic(
         paragraphs.splice(0, paragraphs.length, ...fallbackParagraphs);
       }
     }
-    
+
     // Step 2: Extract metadata for each paragraph
     const paragraphMetadata = await extractParagraphMetadata(paragraphs);
     console.log(`Extracted metadata for ${paragraphMetadata.length} paragraphs`);
-    
+
     // We'll create completely separate paragraph audio files
     // No need for silence files for concatenation anymore
     const silenceFilePath = ''; // Empty string as we won't use silence files
-    
+
     // Step 4: Process each paragraph as a completely separate file
     console.log(`Starting to process ${paragraphs.length} paragraphs as separate files...`);
-    
+
     // Array to hold all the paragraph audio file paths
     const allFilePaths: string[] = [];
-    
+
     // Process each paragraph as a completely separate audio file
     for (let i = 0; i < paragraphs.length; i++) {
       const paragraph = paragraphs[i];
       const metadata = paragraphMetadata[i];
-      
+
       // Skip empty paragraphs
       if (!paragraph.trim()) continue;
-      
-      console.log(`Processing paragraph ${i+1}/${paragraphs.length} with mood: ${metadata.mood} as a COMPLETELY SEPARATE FILE`);
-      
+
+      console.log(`Processing paragraph ${i + 1}/${paragraphs.length} with mood: ${metadata.mood} as a COMPLETELY SEPARATE FILE`);
+
       // Generate TTS audio for this paragraph
-      const narrationPath = join(tempDir, `narration_${i+1}.mp3`);
+      const narrationPath = join(tempDir, `narration_${i + 1}.mp3`);
       await generateTTSAudio(paragraph, narrationPath, options);
-      
+
       // Fetch background music based on mood and intensity
-      const backgroundMusicPath = join(tempDir, `background_${i+1}.mp3`);
+      const backgroundMusicPath = join(tempDir, `background_${i + 1}.mp3`);
       await fetchBackgroundMusic(metadata.mood, backgroundMusicPath, metadata.intensity);
-      
+
       // Create the final paragraph audio file with a unique name
-      const paragraphAudioPath = join(tempDir, `paragraph_${i+1}.mp3`);
-      
+      const paragraphAudioPath = join(tempDir, `paragraph_${i + 1}.mp3`);
+
       // Get narration duration for trimming background music
       const narrationDuration = await new Promise<number>((resolve, reject) => {
         ffmpeg.ffprobe(narrationPath, (err, metadata) => {
@@ -925,11 +948,11 @@ export async function generateNarrationWithBackgroundMusic(
           resolve(metadata.format.duration || 0);
         });
       });
-      
-      console.log(`Paragraph ${i+1} narration duration: ${narrationDuration} seconds`);
-      
+
+      console.log(`Paragraph ${i + 1} narration duration: ${narrationDuration} seconds`);
+
       // Trim background music to match narration length
-      const trimmedMusicPath = join(tempDir, `trimmed_music_${i+1}.mp3`);
+      const trimmedMusicPath = join(tempDir, `trimmed_music_${i + 1}.mp3`);
       await new Promise<void>((resolve, reject) => {
         ffmpeg()
           .input(backgroundMusicPath)
@@ -943,9 +966,9 @@ export async function generateNarrationWithBackgroundMusic(
           })
           .run();
       });
-      
+
       // Adjust background music volume
-      const volumeAdjustedMusicPath = join(tempDir, `volume_adjusted_music_${i+1}.mp3`);
+      const volumeAdjustedMusicPath = join(tempDir, `volume_adjusted_music_${i + 1}.mp3`);
       const bgVolume = options.backgroundMusicVolume || DEFAULT_OPTIONS.backgroundMusicVolume;
       await new Promise<void>((resolve, reject) => {
         ffmpeg()
@@ -959,12 +982,12 @@ export async function generateNarrationWithBackgroundMusic(
             reject(err);
           })
           .run();
-      }); 
-      
+      });
+
       // Create a clean paragraph audio file with ABSOLUTELY NO FADING and HARD CUTS
       await new Promise<void>((resolve, reject) => {
-        console.log(`Creating paragraph ${i+1} as STANDALONE FILE with ABSOLUTELY NO FADING`);
-        
+        console.log(`Creating paragraph ${i + 1} as STANDALONE FILE with ABSOLUTELY NO FADING`);
+
         ffmpeg()
           .input(narrationPath)
           .input(volumeAdjustedMusicPath)
@@ -978,32 +1001,32 @@ export async function generateNarrationWithBackgroundMusic(
           // Remove all fade filters completely
           .output(paragraphAudioPath)
           .on('end', () => {
-            console.log(`Created STANDALONE paragraph ${i+1} audio file with ABSOLUTELY NO FADING`);
-            
+            console.log(`Created STANDALONE paragraph ${i + 1} audio file with ABSOLUTELY NO FADING`);
+
             // Verify the file exists and has content
             try {
               const stats = require('fs').statSync(paragraphAudioPath);
-              console.log(`Paragraph ${i+1} file created: ${paragraphAudioPath}, size: ${stats.size} bytes`);
-              
+              console.log(`Paragraph ${i + 1} file created: ${paragraphAudioPath}, size: ${stats.size} bytes`);
+
               if (stats.size === 0) {
-                console.error(`ERROR: Paragraph ${i+1} file has zero bytes`);
+                console.error(`ERROR: Paragraph ${i + 1} file has zero bytes`);
               }
             } catch (err) {
-              console.error(`Error verifying paragraph ${i+1} file:`, err);
+              console.error(`Error verifying paragraph ${i + 1} file:`, err);
             }
-            
+
             resolve();
           })
           .on('error', (err) => {
-            console.error(`Error creating paragraph ${i+1} audio:`, err);
+            console.error(`Error creating paragraph ${i + 1} audio:`, err);
             reject(err);
           })
           .run();
       });
-      
+
       // Add paragraph audio to the file list
       allFilePaths.push(paragraphAudioPath);
-      
+
       // Clean up intermediate files
       try {
         unlinkSync(narrationPath);
@@ -1014,55 +1037,55 @@ export async function generateNarrationWithBackgroundMusic(
         console.warn(`Failed to delete some intermediate files: ${err}`);
       }
     }
-    
+
     // Step 5: Upload each paragraph audio file separately
     console.log(`Uploading ${paragraphs.length} separate paragraph audio files to Firebase`);
-    
+
     // Array to store download URLs for each paragraph
     const downloadURLs: string[] = [];
-    
+
     // Get only the paragraph audio files (not silence files)
     const paragraphAudioFiles = allFilePaths.filter(path => path.includes('paragraph_'));
-    
+
     console.log(`Found ${paragraphAudioFiles.length} paragraph audio files to upload`);
-    
+
     // Upload each paragraph audio file individually
     for (let i = 0; i < paragraphAudioFiles.length; i++) {
       const audioPath = paragraphAudioFiles[i];
-      
+
       // Verify file exists and has content
       if (existsSync(audioPath)) {
         const stats = require('fs').statSync(audioPath);
-        console.log(`Paragraph ${i+1} audio file: ${audioPath}, Size: ${stats.size} bytes`);
-        
+        console.log(`Paragraph ${i + 1} audio file: ${audioPath}, Size: ${stats.size} bytes`);
+
         if (stats.size === 0) {
-          console.error(`ERROR: Paragraph ${i+1} audio file has zero bytes`);
+          console.error(`ERROR: Paragraph ${i + 1} audio file has zero bytes`);
           continue;
         }
-        
+
         // Upload to Firebase with unique name
         const timestamp = Date.now();
-        const storagePath = `audio-narrations/books/${bookId}/paragraph_${i+1}_${timestamp}.mp3`;
-        
+        const storagePath = `audio-narrations/books/${bookId}/paragraph_${i + 1}_${timestamp}.mp3`;
+
         try {
-          console.log(`Uploading paragraph ${i+1} audio to Firebase: ${storagePath}`);
+          console.log(`Uploading paragraph ${i + 1} audio to Firebase: ${storagePath}`);
           const url = await uploadAudioToFirebase(audioPath, storagePath);
           downloadURLs.push(url);
-          console.log(`Successfully uploaded paragraph ${i+1}, URL: ${url}`);
+          console.log(`Successfully uploaded paragraph ${i + 1}, URL: ${url}`);
         } catch (err) {
-          console.error(`Error uploading paragraph ${i+1} audio:`, err);
+          console.error(`Error uploading paragraph ${i + 1} audio:`, err);
         }
       } else {
-        console.error(`ERROR: Paragraph ${i+1} audio file does not exist: ${audioPath}`);
+        console.error(`ERROR: Paragraph ${i + 1} audio file does not exist: ${audioPath}`);
       }
     }
-    
+
     // Clean up temporary files
     try {
       if (existsSync(silenceFilePath)) {
         unlinkSync(silenceFilePath);
       }
-      
+
       // Clean up paragraph audio files
       for (const filePath of allFilePaths) {
         if (existsSync(filePath)) {
@@ -1072,30 +1095,30 @@ export async function generateNarrationWithBackgroundMusic(
     } catch (err) {
       console.warn(`Failed to delete some temporary files: ${err}`);
     }
-    
+
     console.log(`Completed processing with ${downloadURLs.length} separate paragraph audio files`);
-    
+
     // Organize paragraphs into episodes if episode breaks are provided
     const episodes: EpisodeAudio[] = [];
-    
+
     if (options.episodeBreaks && options.episodeBreaks.length > 0) {
       console.log(`Organizing paragraphs into ${options.episodeBreaks.length + 1} episodes`);
-      
+
       // Sort episode breaks to ensure they're in ascending order
       const sortedBreaks = [...options.episodeBreaks].sort((a, b) => a - b);
-      
+
       // Add a final break at the end
       sortedBreaks.push(downloadURLs.length);
-      
+
       let startIdx = 0;
       for (let i = 0; i < sortedBreaks.length; i++) {
         const endIdx = sortedBreaks[i];
-        
+
         // Get paragraphs and their metadata for this episode
         const episodeParagraphTexts = paragraphs.slice(startIdx, endIdx);
         const episodeParagraphMetadata = paragraphMetadata.slice(startIdx, endIdx);
         const episodeParagraphUrls = downloadURLs.slice(startIdx, endIdx);
-        
+
         if (episodeParagraphUrls.length > 0) {
           // Extract metadata for this episode
           console.log(`Extracting metadata for episode ${i + 1}`);
@@ -1104,17 +1127,17 @@ export async function generateNarrationWithBackgroundMusic(
             episodeParagraphMetadata,
             i + 1
           );
-          
+
           // Create the episode with metadata
           episodes.push({
             episodeNumber: i + 1,
             paragraphUrls: episodeParagraphUrls,
             metadata: episodeMetadata
           });
-          
+
           console.log(`Episode ${i + 1} contains ${episodeParagraphUrls.length} paragraphs with dominant mood: ${episodeMetadata.mood}`);
         }
-        
+
         startIdx = endIdx;
       }
     } else {
@@ -1125,16 +1148,16 @@ export async function generateNarrationWithBackgroundMusic(
         paragraphMetadata,
         1
       );
-      
+
       episodes.push({
         episodeNumber: 1,
         paragraphUrls: downloadURLs,
         metadata: episodeMetadata
       });
-      
+
       console.log(`All ${downloadURLs.length} paragraphs organized as a single episode with dominant mood: ${episodeMetadata.mood}`);
     }
-    
+
     return {
       paragraphUrls: downloadURLs,
       episodes: episodes,
@@ -1162,11 +1185,11 @@ async function generateFallbackProcessedAudio(
   outputPath: string
 ): Promise<string> {
   console.log('Using fallback audio processing method');
-  
+
   try {
     // Since we can't mix audio without ffmpeg, we'll just copy the narration file to the output path
     const fs = require('fs');
-    
+
     // Check if the narration file exists
     if (existsSync(narrationPath)) {
       // Copy the narration file to the output path
@@ -1181,9 +1204,9 @@ async function generateFallbackProcessedAudio(
       ]);
       fs.writeFileSync(outputPath, silentMp3Header);
     }
-    
+
     return outputPath;
-    
+
   } catch (fallbackError) {
     console.error('Error in fallback audio processing:', fallbackError);
     throw new Error(`Failed to generate fallback processed audio: ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`);

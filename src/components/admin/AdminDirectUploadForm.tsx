@@ -27,10 +27,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
   const handleWriteWithAI = async () => {
     try {
       if (!editor) return;
-      
+
       // Get current content
       const content = editor.getHTML();
-      
+
       if (!content.trim()) {
         alert("Please add some content before using AI rewrite");
         return;
@@ -39,13 +39,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
       // Show loading state
       setIsRewriting(true);
       editor.setEditable(false);
-      
+
       // Call the Gemini API to rewrite the content
       const rewrittenContent = await rewriteAsStory(content);
-      
+
       // Update the editor with the rewritten content
       editor.commands.setContent(rewrittenContent);
-      
+
       // Re-enable editing
       editor.setEditable(true);
     } catch (error) {
@@ -181,22 +181,22 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
   const handleThumbnailChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
+
       // Validate file type
       if (!file.type.includes('image/')) {
         setError('Please select an image file');
         return;
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError('Image size should be less than 5MB');
         return;
       }
-      
+
       setThumbnail(file);
       setError(null);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -229,7 +229,7 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       setContent(html);
-      
+
       if (!html.trim()) {
         setContentError('Content is required');
       } else {
@@ -239,14 +239,14 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
     // Fix SSR hydration issues
     immediatelyRender: false,
   });
-  
+
   // Set editor loaded state when editor is ready
   useEffect(() => {
     if (editor) {
       setEditorLoaded(true);
     }
   }, [editor]);
-  
+
   // Disable/enable editor when uploading status changes
   useEffect(() => {
     if (editor) {
@@ -259,13 +259,13 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
     try {
       // Create a unique filename
       const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-      
+
       // Import R2 services
       const { uploadFileToR2 } = await import('@/r2/services');
-      
+
       // Create a storage path
       const storagePath = `books/thumbnails/${fileName}`;
-      
+
       // Track upload progress (simulated since R2 doesn't have built-in progress)
       const progressInterval = setInterval(() => {
         if (onProgress) {
@@ -273,19 +273,19 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
           onProgress(newProgress);
         }
       }, 300);
-      
+
       try {
         // Upload the file to R2
         const downloadURL = await uploadFileToR2(file, storagePath);
-        
+
         // Clear the progress interval
         clearInterval(progressInterval);
-        
+
         // Set progress to 100%
         if (onProgress) {
           onProgress(100);
         }
-        
+
         return downloadURL;
       } catch (error) {
         // Clear the progress interval
@@ -314,7 +314,7 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
         chapters: [], // Ensure chapters is never undefined
         audioUrl: '' // Ensure audioUrl is never undefined
       };
-      
+
       const docRef = await addDoc(collection(db, 'books'), bookDoc);
       return { ...bookDoc, id: docRef.id };
     } catch (error) {
@@ -325,7 +325,7 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     // Validate required fields
     if (!title.trim()) {
       setTitleError('Title is required');
@@ -334,7 +334,7 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
     } else {
       setTitleError('');
     }
-    
+
     if (!author.trim()) {
       setAuthorError('Author is required');
       setError('Please enter an author name');
@@ -342,7 +342,7 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
     } else {
       setAuthorError('');
     }
-    
+
     if (!content.trim()) {
       setContentError('Content is required');
       setError('Please enter book content');
@@ -350,7 +350,7 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
     } else {
       setContentError('');
     }
-    
+
     if (!tagsInput.trim()) {
       setTagsError('At least one tag is required');
       setError('Please add at least one tag');
@@ -358,27 +358,27 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
     } else {
       setTagsError('');
     }
-    
+
     if (!thumbnail) {
       setError('Please upload a thumbnail image');
       return;
     }
-    
+
     try {
       setUploading(true);
       setError(null);
-      
+
       // Upload thumbnail directly
       const thumbnailUrl = await uploadBookThumbnailDirect(thumbnail, (progress) => {
         setUploadProgress(progress);
       });
-      
+
       // Process tags (split by commas and trim)
       const tags = tagsInput
         .split(',')
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
-      
+
       // Create book document directly
       const result = await createBookDirect({
         title: title.trim(),
@@ -387,9 +387,9 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
         tags,
         thumbnailUrl
       });
-      
+
       console.log('Book created successfully:', result);
-      
+
       // Reset form
       setTitle('');
       setContent('');
@@ -398,12 +398,12 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
       setThumbnail(null);
       setThumbnailPreview(null);
       setUploadProgress(0);
-      
+
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
       }
-      
+
     } catch (err: any) {
       console.error('Error creating book:', err);
       setError(`Failed to create book: ${err.message || 'Please try again.'}`);
@@ -415,13 +415,13 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-[#1F1F1F] rounded-lg shadow-md text-white">
       <h2 className="text-2xl font-bold mb-6">Write a New Book (Admin Mode)</h2>
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-900 border border-red-700 text-white rounded">
           {error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         {/* Title */}
         <div className="mb-4">
@@ -439,7 +439,7 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
             required
           />
         </div>
-        
+
         {/* Author */}
         <div className="mb-4">
           <label htmlFor="author" className="block text-sm font-medium text-gray-300 mb-1">
@@ -456,7 +456,7 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
             required
           />
         </div>
-        
+
         {/* Tags */}
         <div className="mb-4">
           <label htmlFor="tags" className="block text-sm font-medium text-gray-300 mb-1">
@@ -472,7 +472,7 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
             disabled={uploading}
           />
         </div>
-        
+
         {/* Thumbnail */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -499,25 +499,25 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
               {thumbnail ? thumbnail.name : 'No file selected'}
             </span>
           </div>
-          
+
           {/* Thumbnail Preview */}
           {thumbnailPreview && (
             <div className="mt-2">
-              <img 
-                src={thumbnailPreview} 
-                alt="Thumbnail preview" 
-                className="h-40 object-cover rounded border border-gray-300" 
+              <img
+                src={thumbnailPreview}
+                alt="Thumbnail preview"
+                className="h-40 object-cover rounded border border-gray-300"
               />
             </div>
           )}
         </div>
-        
+
         {/* Content */}
         <div className="mb-6">
           <label htmlFor="content" className="block text-sm font-medium text-gray-300 mb-1">
             Book Content *
           </label>
-          
+
           {/* Tiptap Editor */}
           <div className="border border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-primary overflow-hidden">
             {!editorLoaded ? (
@@ -534,20 +534,20 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
           <p className="text-xs text-gray-400 mt-1">Use the toolbar to format your content</p>
           {contentError && <p className="text-red-500 text-sm mt-1">{contentError}</p>}
         </div>
-        
+
         {/* Upload Progress */}
         {uploading && (
           <div className="mb-4">
             <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div 
-                className="bg-primary h-2.5 rounded-full" 
+              <div
+                className="bg-primary h-2.5 rounded-full"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
             </div>
             <p className="text-sm text-gray-600 mt-1">{Math.round(uploadProgress)}% uploaded</p>
           </div>
         )}
-        
+
         {/* Submit Button */}
         <button
           type="submit"

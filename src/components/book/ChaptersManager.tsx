@@ -41,7 +41,7 @@ const ChaptersManager = ({ chapters = [], onChange, bookId }: ChaptersManagerPro
       createdAt: Date.now(),
       audioUrl: '' // Initialize audioUrl to prevent undefined value
     };
-    
+
     const updatedChapters = [...localChapters, newChapter];
     setLocalChapters(updatedChapters);
     onChange(updatedChapters);
@@ -80,7 +80,7 @@ const ChaptersManager = ({ chapters = [], onChange, bookId }: ChaptersManagerPro
       ...chapter,
       order: idx
     }));
-    
+
     setLocalChapters(updatedChapters);
     onChange(updatedChapters);
   };
@@ -90,6 +90,7 @@ const ChaptersManager = ({ chapters = [], onChange, bookId }: ChaptersManagerPro
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-white">Episodes</h2>
         <button
+          type="button"
           onClick={addChapter}
           className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
         >
@@ -118,8 +119,8 @@ const ChaptersManager = ({ chapters = [], onChange, bookId }: ChaptersManagerPro
                         {...provided.draggableProps}
                       >
                         <div className="flex items-start">
-                          <div 
-                            {...provided.dragHandleProps} 
+                          <div
+                            {...provided.dragHandleProps}
                             className="p-2 mr-2 mt-4 cursor-move bg-[#333333] rounded flex items-center justify-center"
                             title="Drag to reorder"
                           >

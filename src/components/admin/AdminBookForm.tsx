@@ -10,6 +10,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import ChaptersManager from '../book/ChaptersManager';
 import EnhancedAudioNarrationButton from '../book/EnhancedAudioNarrationButton';
 import { generateImageFromPrompt, generateConciseSummary, dataUrlToFile, rewriteAsStory } from '@/services/gemini';
+import { useAuth } from '@/context/AuthContext';
 
 interface AdminBookFormProps {
   onSuccess?: () => void;
@@ -28,10 +29,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
   const handleWriteWithAI = async () => {
     try {
       if (!editor) return;
-      
+
       // Get current content
       const content = editor.getHTML();
-      
+
       if (!content.trim()) {
         alert("Please add some content before using AI rewrite");
         return;
@@ -40,13 +41,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
       // Show loading state
       setIsRewriting(true);
       editor.setEditable(false);
-      
+
       // Call the Gemini API to rewrite the content
       const rewrittenContent = await rewriteAsStory(content);
-      
+
       // Update the editor with the rewritten content
       editor.commands.setContent(rewrittenContent);
-      
+
       // Re-enable editing
       editor.setEditable(true);
     } catch (error) {
@@ -175,6 +176,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
 }
 
 const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
+  const { user } = useAuth();
   const [title, setTitle] = useState(existingBook?.title || '');
   const [titleError, setTitleError] = useState<string>('');
   const [content, setContent] = useState<string>(existingBook?.content || '');
@@ -206,22 +208,22 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
   const handleThumbnailChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
+
       // Validate file type
       if (!file.type.includes('image/')) {
         setError('Please select an image file');
         return;
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError('Image size should be less than 5MB');
         return;
       }
-      
+
       setThumbnail(file);
       setError(null);
-      
+
       // Create preview
       const reader = new FileReader();
       reader.onload = (event) => {
@@ -230,7 +232,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
       reader.readAsDataURL(file);
     }
   };
-  
+
   // Generate concise summary with AI
   const handleGenerateConciseSummary = async () => {
     if (!description.trim()) {
@@ -238,17 +240,17 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
       setError('Please enter a book description first');
       return;
     }
-    
+
     try {
       setGeneratingSummary(true);
       setError(null);
-      
+
       // Generate concise summary using Gemini API
       const summary = await generateConciseSummary(description);
-      
+
       // Set the concise summary
       setConciseSummary(summary);
-      
+
     } catch (err: any) {
       console.error('Error generating concise summary:', err);
       setError(`Failed to generate summary: ${err.message || 'Please try again.'}`);
@@ -256,30 +258,30 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
       setGeneratingSummary(false);
     }
   };
-  
+
   // Generate thumbnail with AI
   const [generatingImage, setGeneratingImage] = useState(false);
-  
+
   const handleGenerateAIThumbnail = async () => {
     if (!conciseSummary.trim()) {
       setError('Please generate a concise summary first');
-          return;
-        }
+      return;
+    }
 
     try {
       setGeneratingImage(true);
       setError(null);
-      
+
       // Generate image using Gemini API with the concise summary as prompt
       const imageDataUrl = await generateImageFromPrompt(conciseSummary);
-      
+
       // Convert data URL to File object
       const file = dataUrlToFile(imageDataUrl, `ai-generated-${Date.now()}.png`);
-      
+
       // Set as thumbnail
       setThumbnail(file);
       setThumbnailPreview(imageDataUrl);
-      
+
     } catch (err: any) {
       console.error('Error generating AI image:', err);
       setError(`Failed to generate image: ${err.message || 'Please try again.'}`);
@@ -311,7 +313,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       setContent(html);
-      
+
       if (publishMode === 'single' && !html.trim()) {
         setContentError('Content is required for single-chapter books');
       } else {
@@ -321,14 +323,14 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
     // Fix SSR hydration issues
     immediatelyRender: false,
   });
-  
+
   // Set editor loaded state when editor is ready
   useEffect(() => {
     if (editor) {
       setEditorLoaded(true);
     }
   }, [editor]);
-  
+
   // Disable/enable editor when uploading status changes
   useEffect(() => {
     if (editor) {
@@ -339,7 +341,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
   // Handle chapters change
   const handleChaptersChange = (updatedChapters: Chapter[]) => {
     setChapters(updatedChapters);
-    
+
     if (publishMode === 'episodes' && updatedChapters.length === 0) {
       setChaptersError('At least one episode is required');
     } else {
@@ -350,7 +352,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
   // Handle publish mode change
   const handlePublishModeChange = (mode: 'single' | 'episodes') => {
     setPublishMode(mode);
-    
+
     // Reset validation errors based on new mode
     if (mode === 'single') {
       setChaptersError('');
@@ -367,7 +369,13 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
+    // Validate user is logged in
+    if (!user) {
+      setError('You must be logged in to create a book');
+      return;
+    }
+
     // Validate required fields
     if (!title.trim()) {
       setTitleError('Title is required');
@@ -376,7 +384,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
     } else {
       setTitleError('');
     }
-    
+
     if (!author.trim()) {
       setAuthorError('Author is required');
       setError('Please enter an author name');
@@ -384,7 +392,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
     } else {
       setAuthorError('');
     }
-    
+
     if (!description.trim()) {
       setDescriptionError('Book description is required');
       setError('Please enter a book description/summary');
@@ -392,7 +400,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
     } else {
       setDescriptionError('');
     }
-    
+
     if (publishMode === 'single' && !content.trim()) {
       setContentError('Content is required');
       setError('Please enter book content');
@@ -408,7 +416,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
     } else {
       setChaptersError('');
     }
-    
+
     if (!tagsInput.trim()) {
       setTagsError('At least one tag is required');
       setError('Please add at least one tag');
@@ -416,34 +424,34 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
     } else {
       setTagsError('');
     }
-    
+
     if (!thumbnailPreview) {
       setError('Please upload a thumbnail image');
       return;
     }
-    
+
     try {
       setUploading(true);
       setError(null);
-      
+
       let thumbnailUrl = existingBook?.thumbnailUrl || '';
-      
+
       // Upload thumbnail if a new one was selected
       if (thumbnail) {
         thumbnailUrl = await uploadBookThumbnail(thumbnail, (progress) => {
           setUploadProgress(progress);
         });
       }
-      
+
       // Process tags (split by commas and trim)
       const tags = tagsInput
         .split(',')
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
-      
+
       // Prepare chapters data
       let finalChapters: Chapter[] = [];
-      
+
       if (publishMode === 'single') {
         // For single mode, create one chapter with the main content
         finalChapters = [{
@@ -465,7 +473,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
             audioUrl: chapter.audioUrl || '' // Ensure audioUrl is never undefined
           }));
       }
-      
+
       // Create or update book document
       let result;
       if (existingBook?.id) {
@@ -477,15 +485,16 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
           displayDescription, // Whether to display description on book page
           author: author.trim(),
           tags,
+          authorId: user.uid, // Add the current user's ID as authorId
           thumbnailUrl,
           chapters: finalChapters
         };
-        
+
         // Only add audioUrl if it exists
         if (audioUrl) {
           updateData.audioUrl = audioUrl;
         }
-        
+
         result = await updateBook(existingBook.id, updateData);
         console.log('Book updated successfully:', result);
       } else {
@@ -496,15 +505,16 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
           description: description.trim(), // Book summary/description
           author: author.trim(),
           tags,
+          authorId: user.uid, // Add the current user's ID as authorId
           thumbnailUrl,
           chapters: finalChapters,
           audioUrl: audioUrl || '' // Ensure audioUrl is never undefined
         };
-        
+
         result = await createBook(bookData);
         console.log('Book created successfully:', result);
       }
-      
+
       // Reset form if not editing
       if (!existingBook) {
         setTitle('');
@@ -517,12 +527,12 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
         setUploadProgress(0);
         setChapters([]);
       }
-      
+
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
       }
-      
+
     } catch (err: any) {
       console.error(existingBook ? 'Error updating book:' : 'Error creating book:', err);
       setError(`Failed to ${existingBook ? 'update' : 'create'} book: ${err.message || 'Please try again.'}`);
@@ -534,13 +544,13 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-[#1F1F1F] rounded-lg shadow-md text-white">
       <h2 className="text-2xl font-bold mb-6">{existingBook ? 'Edit Book' : 'Create New Book'}</h2>
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-900 border border-red-700 text-white rounded">
           {error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         {/* Title */}
         <div className="mb-4">
@@ -559,7 +569,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
           />
           {titleError && <p className="text-red-500 text-sm mt-1">{titleError}</p>}
         </div>
-        
+
         {/* Author */}
         <div className="mb-4">
           <label htmlFor="author" className="block text-sm font-medium text-gray-300 mb-1">
@@ -577,7 +587,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
           />
           {authorError && <p className="text-red-500 text-sm mt-1">{authorError}</p>}
         </div>
-        
+
         {/* Description */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-1">
@@ -618,7 +628,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
             required
           />
           {descriptionError && <p className="text-red-500 text-sm mt-1">{descriptionError}</p>}
-          
+
           {/* Concise Summary Display */}
           {conciseSummary && (
             <div className="mt-2 p-3 bg-[#2a2a2a] border border-[#5A3E85] rounded-md">
@@ -628,7 +638,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
               <p className="text-sm text-white">{conciseSummary}</p>
             </div>
           )}
-          
+
           {/* Display Description Toggle */}
           <div className="mt-3 flex items-center">
             <input
@@ -644,7 +654,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
             </label>
           </div>
         </div>
-        
+
         {/* Tags */}
         <div className="mb-4">
           <label htmlFor="tags" className="block text-sm font-medium text-gray-300 mb-1">
@@ -662,7 +672,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
           />
           {tagsError && <p className="text-red-500 text-sm mt-1">{tagsError}</p>}
         </div>
-        
+
         {/* Thumbnail */}
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-300 mb-1">
@@ -703,27 +713,27 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
             />
             <span className="text-sm text-gray-400">
               {thumbnail ? (
-                thumbnail.name.startsWith('ai-generated') 
-                  ? 'AI-generated image' 
+                thumbnail.name.startsWith('ai-generated')
+                  ? 'AI-generated image'
                   : thumbnail.name
               ) : thumbnailPreview ? 'Current thumbnail' : 'No file selected'}
             </span>
           </div>
-          
+
           {/* Thumbnail Preview */}
           {thumbnailPreview && (
             <div className="mt-4 flex justify-center">
               <div className="relative aspect-[9/16] h-60 border border-gray-300 rounded overflow-hidden">
-                <img 
-                  src={thumbnailPreview} 
-                  alt="Thumbnail preview" 
-                  className="absolute inset-0 w-full h-full object-cover" 
+                <img
+                  src={thumbnailPreview}
+                  alt="Thumbnail preview"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
               </div>
             </div>
           )}
         </div>
-        
+
         {/* Publishing Mode Selection */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -754,7 +764,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
             </label>
           </div>
         </div>
-        
+
         {/* Content - Show only in single mode */}
         {publishMode === 'single' && (
           <div className="mb-6">
@@ -762,10 +772,10 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
               <label htmlFor="content" className="block text-sm font-medium text-gray-300">
                 Book Content *
               </label>
-              
+
               {/* Audio Narration Button */}
               {content && (
-                <EnhancedAudioNarrationButton 
+                <EnhancedAudioNarrationButton
                   text={content.replace(/<[^>]*>/g, ' ')} // Strip HTML tags for narration
                   bookId={existingBook?.id}
                   onSuccess={(url) => setAudioUrl(url)}
@@ -773,7 +783,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
                 />
               )}
             </div>
-            
+
             {/* Tiptap Editor */}
             <div className="border border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-primary overflow-hidden">
               {!editorLoaded ? (
@@ -789,7 +799,7 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
             </div>
             <p className="text-xs text-gray-400 mt-1">Use the toolbar to format your content</p>
             {contentError && <p className="text-red-500 text-sm mt-1">{contentError}</p>}
-            
+
             {/* Audio Preview */}
             {audioUrl && (
               <div className="mt-3">
@@ -802,32 +812,32 @@ const AdminBookForm = ({ onSuccess, existingBook }: AdminBookFormProps) => {
             )}
           </div>
         )}
-        
+
         {/* Chapters Manager - Show only in episodes mode */}
         {publishMode === 'episodes' && (
           <div className="mb-6">
-            <ChaptersManager 
-              chapters={chapters} 
+            <ChaptersManager
+              chapters={chapters}
               onChange={handleChaptersChange}
               bookId={existingBook?.id}
             />
             {chaptersError && <p className="text-red-500 text-sm mt-1">{chaptersError}</p>}
           </div>
         )}
-        
+
         {/* Upload Progress */}
         {uploading && (
           <div className="mb-4">
             <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div 
-                className="bg-primary h-2.5 rounded-full" 
+              <div
+                className="bg-primary h-2.5 rounded-full"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
             </div>
             <p className="text-sm text-gray-400 mt-1">{Math.round(uploadProgress)}% uploaded</p>
           </div>
         )}
-        
+
         {/* Submit Button */}
         <button
           type="submit"

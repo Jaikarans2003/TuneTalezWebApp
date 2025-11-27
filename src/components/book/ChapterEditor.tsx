@@ -51,10 +51,10 @@ const MenuBar = ({ editor }: { editor: any }) => {
   const handleWriteWithAI = async () => {
     try {
       if (!editor) return;
-      
+
       // Get current content
       const content = editor.getHTML();
-      
+
       if (!content.trim()) {
         alert("Please add some content before using AI rewrite");
         return;
@@ -63,13 +63,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
       // Show loading state
       setIsRewriting(true);
       editor.setEditable(false);
-      
+
       // Call the Gemini API to rewrite the content
       const rewrittenContent = await rewriteAsStory(content);
-      
+
       // Update the editor with the rewritten content
       editor.commands.setContent(rewrittenContent);
-      
+
       // Re-enable editing
       editor.setEditable(true);
     } catch (error) {
@@ -84,6 +84,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
   return (
     <div className="border-b border-gray-600 p-1 flex flex-wrap gap-1 bg-[#333333]">
       <button
+        type="button"
         onClick={handleWriteWithAI}
         disabled={isRewriting}
         className={`px-2 py-1 rounded ${isRewriting ? 'bg-purple-800 opacity-70' : 'bg-purple-700 hover:bg-purple-600'} text-white mr-2`}
@@ -93,6 +94,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       </button>
       <span className="mx-1 text-gray-500">|</span>
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
         className={`p-1 rounded ${editor.isActive('heading', { level: 1 }) ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Heading 1"
@@ -100,6 +102,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
         H1
       </button>
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         className={`p-1 rounded ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Heading 2"
@@ -107,6 +110,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
         H2
       </button>
       <button
+        type="button"
         onClick={() => editor.chain().focus().setParagraph().run()}
         className={`p-1 rounded ${editor.isActive('paragraph') ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Paragraph"
@@ -115,6 +119,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       </button>
       <span className="mx-1 text-gray-500">|</span>
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`p-1 rounded ${editor.isActive('bold') ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Bold"
@@ -122,6 +127,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
         <strong>B</strong>
       </button>
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={`p-1 rounded ${editor.isActive('italic') ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Italic"
@@ -129,6 +135,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
         <em>I</em>
       </button>
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         className={`p-1 rounded ${editor.isActive('underline') ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Underline"
@@ -137,6 +144,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       </button>
       <span className="mx-1 text-gray-500">|</span>
       <button
+        type="button"
         onClick={() => editor.chain().focus().setTextAlign('left').run()}
         className={`p-1 rounded ${editor.isActive({ textAlign: 'left' }) ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Align left"
@@ -144,6 +152,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
         ←
       </button>
       <button
+        type="button"
         onClick={() => editor.chain().focus().setTextAlign('center').run()}
         className={`p-1 rounded ${editor.isActive({ textAlign: 'center' }) ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Align center"
@@ -151,6 +160,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
         ↔
       </button>
       <button
+        type="button"
         onClick={() => editor.chain().focus().setTextAlign('right').run()}
         className={`p-1 rounded ${editor.isActive({ textAlign: 'right' }) ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Align right"
@@ -159,6 +169,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       </button>
       <span className="mx-1 text-gray-500">|</span>
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className={`p-1 rounded ${editor.isActive('bulletList') ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Bullet list"
@@ -166,6 +177,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
         • List
       </button>
       <button
+        type="button"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         className={`p-1 rounded ${editor.isActive('orderedList') ? 'bg-gray-700' : 'bg-[#444444] hover:bg-gray-600'}`}
         title="Numbered list"
@@ -174,6 +186,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
       </button>
       <span className="mx-1 text-gray-500">|</span>
       <button
+        type="button"
         onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
         className="p-1 rounded bg-[#444444] hover:bg-gray-600"
         title="Clear formatting"
@@ -184,13 +197,13 @@ const MenuBar = ({ editor }: { editor: any }) => {
   );
 }
 
-const ChapterEditor = ({ 
-  chapter, 
-  onChange, 
-  onDelete, 
-  isNew = false, 
+const ChapterEditor = ({
+  chapter,
+  onChange,
+  onDelete,
+  isNew = false,
   episodeNumber = 1,
-  useEnhancedNarration = true 
+  useEnhancedNarration = true
 }: ChapterEditorProps) => {
   const [title, setTitle] = useState(chapter.title || '');
   const [content, setContent] = useState(chapter.content || '');
@@ -221,7 +234,7 @@ const ChapterEditor = ({
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       setContent(html);
-      
+
       if (!html.trim()) {
         setContentError('Content is required');
       } else {
@@ -239,7 +252,7 @@ const ChapterEditor = ({
     // Fix SSR hydration issues
     immediatelyRender: false,
   });
-  
+
   // Set editor loaded state when editor is ready
   useEffect(() => {
     if (editor) {
@@ -251,7 +264,7 @@ const ChapterEditor = ({
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    
+
     if (!newTitle.trim()) {
       setTitleError('Title is required');
     } else {
@@ -307,7 +320,8 @@ const ChapterEditor = ({
           )}
 
           {onDelete && (
-            <button 
+            <button
+              type="button"
               onClick={onDelete}
               className="px-3 py-1 bg-red-800 text-white rounded hover:bg-red-700 transition-colors"
               title="Delete episode"
@@ -317,7 +331,7 @@ const ChapterEditor = ({
           )}
         </div>
       </div>
-      
+
       {/* Title */}
       <div className="mb-4">
         <label htmlFor={`chapter-title-${chapter.id || 'new'}`} className="block text-sm font-medium text-gray-300 mb-1">
@@ -334,13 +348,13 @@ const ChapterEditor = ({
         />
         {titleError && <p className="text-red-500 text-sm mt-1">{titleError}</p>}
       </div>
-      
+
       {/* Content */}
       <div className="mb-2">
         <label htmlFor={`chapter-content-${chapter.id || 'new'}`} className="block text-sm font-medium text-gray-300 mb-1">
           Episode Content *
         </label>
-        
+
         {/* Tiptap Editor */}
         <div className="border border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-primary overflow-hidden">
           {!editorLoaded ? (

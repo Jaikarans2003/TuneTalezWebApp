@@ -17,7 +17,7 @@ function HomeContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Get search query from URL
+  // Get search query from URLpk8-9
   const searchParams = useSearchParams();   
   
   useEffect(() => {
@@ -191,9 +191,9 @@ function HomeContent() {
           </div>
         ) : (
           <>
-            {/* Featured Collection - Recently Added Books */}
+            {/* Featured Collection - Recently Added Books */}  +
             <section id="featured-collection" className="mb-16 py-16">
-              <div className="flex flex-col md:flex-row justify-between items-center mb-12 animate-fade-in">
+              <div className="flex flex-col md:flex-row justify-between items-center mb-12 animate-fade-in">  
                 <div className="mb-6 md:mb-0 animate-slide-up">
                   <div className="flex items-center mb-2">
                     <div className="w-10 h-1 bg-gradient-to-r from-primary to-orange rounded mr-3"></div>
