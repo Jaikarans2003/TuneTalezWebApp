@@ -72,8 +72,8 @@ export const concatenateAudioBlobs = async (blobs: Blob[]): Promise<Blob> => {
     )
   );
   
-  // Calculate total duration with 3-second gaps between paragraphs
-  const gapDuration = 3; // 3 seconds gap
+  // Calculate total duration with 1.5-second gaps between paragraphs
+  const gapDuration = 1.5; // 1.5 seconds gap
   const totalDuration = buffers.reduce((sum, buffer) => sum + buffer.duration, 0) + (buffers.length - 1) * gapDuration;
   
   // Create offline context for the total duration
@@ -83,7 +83,7 @@ export const concatenateAudioBlobs = async (blobs: Blob[]): Promise<Blob> => {
     sampleRate: audioContext.sampleRate
   });
   
-  // Concatenate buffers with 3-second gaps
+  // Concatenate buffers with 1.5-second gaps
   let currentTime = 0;
   
   buffers.forEach((buffer, index) => {

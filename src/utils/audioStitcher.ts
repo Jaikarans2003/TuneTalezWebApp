@@ -138,7 +138,18 @@ export const stitchAudioWithBackground = async (
     
     const backgroundSourceNode = offlineContext.createBufferSource();
     backgroundSourceNode.buffer = backgroundBuffer;
-    backgroundSourceNode.loop = true; // Loop the background music if it's shorter than the narration
+    
+    // Calculate loop count for background music
+    const loopCount = Math.ceil(narrationDuration / backgroundBuffer.duration);
+    console.log(`Background music duration: ${backgroundBuffer.duration}s, Narration duration: ${narrationDuration}s, Loop count needed: ${loopCount}`);
+    
+    // Loop the background music if it's shorter than the narration
+    if (backgroundBuffer.duration < narrationDuration) {
+      backgroundSourceNode.loop = true;
+      console.log('Background music will loop to match narration duration');
+    } else {
+      console.log('Background music is longer than narration, no looping needed');
+    }
     
     // Create gain nodes for volume control
     const narrationGain = offlineContext.createGain();
@@ -187,6 +198,16 @@ export const stitchAudioWithBackground = async (
     // Start the sources
     narrationSourceNode.start(0);
     backgroundSourceNode.start(0);
+    
+    // Log final audio parameters for debugging
+    console.log('Audio mixing complete - sources started:', {
+      narrationStarted: true,
+      backgroundStarted: true,
+      backgroundLooping: backgroundSourceNode.loop,
+      backgroundDuration: backgroundBuffer.duration,
+      narrationDuration: narrationDuration,
+      expectedLoopCount: backgroundSourceNode.loop ? Math.ceil(narrationDuration / backgroundBuffer.duration) : 1
+    });
     
     // Render the audio
     console.log('Rendering audio...');
@@ -293,10 +314,32 @@ export const stitchAudioWithMultipleBackgrounds = async (
       const backgroundBuffer = backgroundBuffers[i];
       console.log(`Using background music ${i} for paragraph ${i} with mood: ${paragraph.mood || 'unknown'}`);
       
+      // Calculate timing first (before using start/end variables)
+      const start = paragraph.start;
+      const end = nextParagraph ? nextParagraph.start : narrationDuration;
+      const paragraphDuration = end - start;
+      const crossfadeDuration = options.crossfadeDuration || DEFAULT_OPTIONS.crossfadeDuration!;
+      
       // Create source and gain nodes
       const source = offlineContext.createBufferSource();
       source.buffer = backgroundBuffer;
-      source.loop = true; // Loop if needed
+      
+      // Calculate if looping is needed for this paragraph
+      const loopCount = Math.ceil(paragraphDuration / backgroundBuffer.duration);
+      console.log(`Paragraph ${i}: duration ${paragraphDuration}s, music duration ${backgroundBuffer.duration}s, loop count needed: ${loopCount}`);
+      
+      // Extend background music by 1 second after TTS ends
+      const extendedEnd = end + 1.0; // Add 1 second extension
+      
+      console.log(`Paragraph ${i}: TTS ends at ${end}s, background music will extend to ${extendedEnd}s (1 second extension)`);
+      
+      // Loop the background music if it's shorter than the paragraph duration
+      if (backgroundBuffer.duration < paragraphDuration) {
+        source.loop = true;
+        console.log(`Background music for paragraph ${i} will loop ${loopCount} times`);
+      } else {
+        console.log(`Background music for paragraph ${i} is longer than paragraph duration, no looping needed`);
+      }
       
       const gain = offlineContext.createGain();
       gain.gain.value = 0; // Start at zero volume
@@ -304,11 +347,6 @@ export const stitchAudioWithMultipleBackgrounds = async (
       // Connect nodes
       source.connect(gain);
       gain.connect(offlineContext.destination);
-      
-      // Calculate timing
-      const start = paragraph.start;
-      const end = nextParagraph ? nextParagraph.start : narrationDuration;
-      const crossfadeDuration = options.crossfadeDuration || DEFAULT_OPTIONS.crossfadeDuration!;
       
       // Set volume automation
       // Fade in
@@ -320,25 +358,26 @@ export const stitchAudioWithMultipleBackgrounds = async (
         start + Math.min(crossfadeDuration, (end - start) / 2)
       );
       
-      // Fade out
+      // Fade out with 1 second extension
       if (nextParagraph) {
+        // For non-last paragraphs, fade out 0.5 seconds before the extended end
         gain.gain.setValueAtTime(
-          bgVolume, // Use the same bgVolume variable for consistency
-          end - crossfadeDuration
+          bgVolume,
+          extendedEnd - 0.5
         );
-        gain.gain.linearRampToValueAtTime(0, end);
+        gain.gain.linearRampToValueAtTime(0, extendedEnd);
       } else {
-        // Last paragraph, fade out at the end
+        // Last paragraph, fade out at the extended end
         gain.gain.setValueAtTime(
-          bgVolume, // Use the same bgVolume variable for consistency
-          end - (options.fadeOutDuration || DEFAULT_OPTIONS.fadeOutDuration!)
+          bgVolume,
+          extendedEnd - (options.fadeOutDuration || DEFAULT_OPTIONS.fadeOutDuration!)
         );
-        gain.gain.linearRampToValueAtTime(0, end);
+        gain.gain.linearRampToValueAtTime(0, extendedEnd);
       }
       
-      // Start the source
+      // Start the source with 1-second extension
       source.start(start);
-      source.stop(end);
+      source.stop(extendedEnd);
       
       // Store references
       backgroundSources.push(source);

@@ -42,12 +42,12 @@ const BookChapterManager = ({ bookId, onSuccess }: BookChapterManagerProps) => {
         setLoading(true);
         setError(null);
         const bookData = await getBookById(bookId);
-        
+
         if (!bookData) {
           setError('Book not found');
           return;
         }
-        
+
         setBook(bookData);
         // Sort chapters by order
         const sortedChapters = [...(bookData.chapters || [])].sort((a, b) => a.order - b.order);
@@ -59,7 +59,7 @@ const BookChapterManager = ({ bookId, onSuccess }: BookChapterManagerProps) => {
         setLoading(false);
       }
     };
-    
+
     fetchBook();
   }, [bookId]);
 
@@ -69,34 +69,35 @@ const BookChapterManager = ({ bookId, onSuccess }: BookChapterManagerProps) => {
       setError('Episode title and content are required');
       return;
     }
-    
+
     try {
       setSaving(true);
       setError(null);
-      
+
       // Add the new chapter
       const addedChapter = await addChapter(bookId, {
         title: newChapter.title,
         content: newChapter.content,
-        order: chapters.length // Add to the end
+        order: chapters.length, // Add to the end
+        audioUrl: newChapter.audioUrl || '' // Include audioUrl when adding
       });
-      
+
       // Update local state
       setChapters([...chapters, addedChapter]);
       setIsAddingChapter(false);
       setNewChapter({ title: '', content: '', order: 0 });
       setSuccessMessage('Episode added successfully!');
-      
+
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
       }
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
-      
+
     } catch (err: any) {
       console.error('Error adding chapter:', err);
       setError(`Failed to add episode: ${err.message || 'Please try again.'}`);
@@ -112,29 +113,30 @@ const BookChapterManager = ({ bookId, onSuccess }: BookChapterManagerProps) => {
       setError('Invalid episode data');
       return;
     }
-    
+
     try {
       setSaving(true);
       setError(null);
-      
+
       // Update the chapter
       const updatedChapter = await updateChapter(bookId, chapter.id, {
         title: chapter.title,
-        content: chapter.content
+        content: chapter.content,
+        audioUrl: chapter.audioUrl || '' // Include audioUrl in updates
       });
-      
+
       // Update local state
       const updatedChapters = [...chapters];
       updatedChapters[index] = updatedChapter;
       setChapters(updatedChapters);
-      
+
       setSuccessMessage('Episode updated successfully!');
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
-      
+
     } catch (err: any) {
       console.error('Error updating chapter:', err);
       setError(`Failed to update episode: ${err.message || 'Please try again.'}`);
@@ -150,18 +152,18 @@ const BookChapterManager = ({ bookId, onSuccess }: BookChapterManagerProps) => {
       setError('Invalid episode data');
       return;
     }
-    
+
     if (!window.confirm(`Are you sure you want to delete the episode "${chapter.title}"? This action cannot be undone.`)) {
       return;
     }
-    
+
     try {
       setSaving(true);
       setError(null);
-      
+
       // Delete the chapter
       await deleteChapter(bookId, chapter.id);
-      
+
       // Update local state
       const updatedChapters = chapters.filter((_, i) => i !== index);
       // Update order property for all chapters
@@ -169,15 +171,15 @@ const BookChapterManager = ({ bookId, onSuccess }: BookChapterManagerProps) => {
         ...ch,
         order: idx
       }));
-      
+
       setChapters(reorderedChapters);
       setSuccessMessage('Episode deleted successfully!');
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
-      
+
     } catch (err: any) {
       console.error('Error deleting chapter:', err);
       setError(`Failed to delete episode: ${err.message || 'Please try again.'}`);
@@ -189,36 +191,36 @@ const BookChapterManager = ({ bookId, onSuccess }: BookChapterManagerProps) => {
   // Handle reordering chapters
   const handleDragEnd = async (result: any) => {
     if (!result.destination || !bookId) return; // Dropped outside the list
-    
+
     try {
       setSaving(true);
-      
+
       const items = Array.from(chapters);
       const [reorderedItem] = items.splice(result.source.index, 1);
       items.splice(result.destination.index, 0, reorderedItem);
-      
+
       // Update order property for all chapters
       const reorderedChapters = items.map((chapter, idx) => ({
         ...chapter,
         order: idx
       }));
-      
+
       // Update local state first for immediate feedback
       setChapters(reorderedChapters);
-      
+
       // Get array of chapter IDs in new order
       const chapterIds = reorderedChapters.map(chapter => chapter.id || '');
-      
+
       // Update in Firestore
       await reorderChapters(bookId, chapterIds);
-      
+
       setSuccessMessage('Episodes reordered successfully!');
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage(null);
       }, 3000);
-      
+
     } catch (err: any) {
       console.error('Error reordering chapters:', err);
       setError(`Failed to reorder episodes: ${err.message || 'Please try again.'}`);
@@ -259,19 +261,19 @@ const BookChapterManager = ({ bookId, onSuccess }: BookChapterManagerProps) => {
           {isAddingChapter ? 'Cancel' : 'Add New Episode'}
         </button>
       </div>
-      
+
       {error && (
         <div className="mb-4 p-3 bg-red-900 border border-red-700 text-white rounded">
           {error}
         </div>
       )}
-      
+
       {successMessage && (
         <div className="mb-4 p-3 bg-green-900 border border-green-700 text-white rounded">
           {successMessage}
         </div>
       )}
-      
+
       {/* Add New Chapter Form */}
       {isAddingChapter && (
         <div className="mb-6 p-4 border border-gray-700 rounded-lg bg-[#222222]">
@@ -292,11 +294,11 @@ const BookChapterManager = ({ bookId, onSuccess }: BookChapterManagerProps) => {
           </div>
         </div>
       )}
-      
+
       {/* Chapters List */}
       <div className="mt-6">
         <h3 className="text-xl font-bold mb-4">Current Episodes</h3>
-        
+
         {chapters.length === 0 ? (
           <div className="p-4 border border-dashed border-gray-600 rounded-lg text-center">
             <p className="text-gray-400">No episodes yet. Click "Add New Episode" to create your first episode.</p>
@@ -318,8 +320,8 @@ const BookChapterManager = ({ bookId, onSuccess }: BookChapterManagerProps) => {
                           {...provided.draggableProps}
                         >
                           <div className="flex items-start">
-                            <div 
-                              {...provided.dragHandleProps} 
+                            <div
+                              {...provided.dragHandleProps}
                               className="p-2 mr-2 mt-4 cursor-move bg-[#333333] rounded flex items-center justify-center"
                               title="Drag to reorder"
                             >
