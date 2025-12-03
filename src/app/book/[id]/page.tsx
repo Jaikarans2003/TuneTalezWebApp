@@ -254,6 +254,13 @@ export default function ViewBookPage() {
     }
   };
 
+  // Function to clean content and remove unwanted characters
+  const cleanContent = (content: string): string => {
+    if (!content) return '';
+    // Remove $ characters and other unwanted formatting
+    return content.replace(/\$/g, '');
+  };
+
   return (
     <div className="container mx-0 md:max-w-full md:px-6 px-1 py-7">
       <div className="mb-3">
@@ -417,9 +424,9 @@ export default function ViewBookPage() {
               {/* SCROLLABLE PROSE: only this section scrolls */}
               <div className="prose prose-invert max-w-none px-0">
                 {selectedChapter ? (
-                  <div dangerouslySetInnerHTML={{ __html: selectedChapter.content }} />
+                  <div dangerouslySetInnerHTML={{ __html: cleanContent(selectedChapter.content) }} />
                 ) : book.content ? (
-                  <div dangerouslySetInnerHTML={{ __html: book.content }} />
+                  <div dangerouslySetInnerHTML={{ __html: cleanContent(book.content) }} />
                 ) : (
                   <div className="text-center py-12">
                     <p className="text-gray-400">No content available for this book.</p>
