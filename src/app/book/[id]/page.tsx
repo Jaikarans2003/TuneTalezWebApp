@@ -44,6 +44,7 @@ export default function ViewBookPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isEpisodesDropdownOpen, setIsEpisodesDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchBookData = async () => {
@@ -263,7 +264,8 @@ export default function ViewBookPage() {
 
   return (
     <div className="container mx-0 md:max-w-full md:px-6 px-1 py-7">
-      <div className="mb-3">
+      {/* Back to Books button - hidden on mobile */}
+      <div className="hidden md:block mb-3">
         <Link 
           href="/"
           className="text-primary hover:text-primary-dark transition-colors flex items-center"
@@ -292,9 +294,105 @@ export default function ViewBookPage() {
           </div>
         </div>
       ) : book ? (
-        <div className="grid grid-cols-1 md:grid-cols-[repeat(14,minmax(0,1fr))] gap-3">
-          {/* Left Sidebar - Book Info */}
-          <div className="md:col-span-3">
+        <div className="grid grid-cols-1 md:grid-cols-[repeat(14,minmax(0,1fr))] gap-4 md:gap-3">
+          
+          {/* Mobile: Book Info with thumbnail left and details+episodes right */}
+          <div className="md:hidden mb-1">
+            <div className="bg-[#1F1F1F] rounded-lg shadow-md p-3 max-w-2xl mx-auto">
+              <div className="flex gap-3">
+                {/* Thumbnail on left */}
+                <div className="relative w-32 h-40 flex-shrink-0">
+                  <Image 
+                    src={book.thumbnailUrl && book.thumbnailUrl.includes('cdn.tunetalez.com') 
+                      ? `${book.thumbnailUrl}?v=${Date.now()}`
+                      : book.thumbnailUrl && (book.thumbnailUrl.includes('thumbnails/book/') || book.thumbnailUrl.includes('/thumbnails/book/'))
+                        ? `https://cdn.tunetalez.com/thumbnails/book/${book.thumbnailUrl.split('/').pop()}?v=${Date.now()}`
+                        : `https://cdn.tunetalez.com/thumbnails/book/${book.thumbnailUrl.split('/').pop()}?v=${Date.now()}`
+                      }
+                    alt={book.title}
+                    fill
+                    className="rounded-md object-cover"
+                    sizes="(max-width: 768px) 128px, 128px"
+                    priority
+                  />
+                </div>
+                
+                {/* Book details and Episodes on right */}
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-lg font-bold text-white mb-2 line-clamp-2">{book.title}</h1>
+                  <p className="text-gray-300 text-sm mb-3">By {book.author}</p>
+                  
+                  {/* Mobile tags */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {book.tags?.slice(0, 4).map((tag, index) => (
+                      <span 
+                        key={index}
+                        className="inline-block bg-[#333333] text-gray-300 px-2 py-1 rounded-md text-xs"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                    {book.tags && book.tags.length > 4 && (
+                      <span className="text-gray-400 text-xs self-center">+{book.tags.length - 4}</span>
+                    )}
+                  </div>
+                  
+                  {/* Episodes Dropdown beside thumbnail and below genre */}
+                  <div className="border-t border-gray-700 pt-3">
+                    <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsEpisodesDropdownOpen(!isEpisodesDropdownOpen)}>
+                      <h2 className="text-sm font-bold text-white">Episodes</h2>
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className={`h-4 w-4 text-gray-300 transition-transform ${isEpisodesDropdownOpen ? 'rotate-180' : ''}`} 
+                        viewBox="0 0 20 20" 
+                        fill="currentColor"
+                      >
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    
+                    {isEpisodesDropdownOpen && book.chapters && book.chapters.length > 0 && (
+                      <div className="mt-2">
+                        <div className="space-y-1 max-h-[120px] overflow-y-auto">
+                          {book.chapters.slice(0, 3).map((chapter, index) => (
+                            <button
+                              key={chapter.id}
+                              onClick={() => {
+                                setSelectedChapterIndex(index);
+                                setIsEpisodesDropdownOpen(false);
+                              }}
+                              className={`w-full text-left p-2 rounded-md text-xs transition-colors ${
+                                selectedChapterIndex === index
+                                  ? 'bg-primary text-white'
+                                  : 'bg-[#333333] text-gray-300 hover:bg-[#444444]'
+                              }`}
+                            >
+                              <span className="block truncate">
+                                <span className="text-white font-medium mr-2">{index + 1}.</span>
+                                {chapter.title}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                        {book.chapters.length > 3 && (
+                          <div className="text-xs text-gray-400 text-center mt-2">
+                            +{book.chapters.length - 3} more episodes
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {!book.chapters || book.chapters.length === 0 && (
+                      <p className="text-gray-400 text-xs mt-2">No episodes available</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Left Sidebar - Book Info */}
+          <div className="hidden md:block md:col-span-3">
             <div className="bg-[#1F1F1F] rounded-lg shadow-md p-4 sticky top-4 h-[82vh] max-h-[82vh] overflow-y-auto">
               <div className="mb-4 relative aspect-[3/4] w-full h-125">
                 <Image 
@@ -374,21 +472,21 @@ export default function ViewBookPage() {
           
           {/* Middle - Book Content */}
           <div className="md:col-span-8 h-full">
-            {/* main content - shorter height (70vh) and scrolls internally */}
-            <div className="bg-[#1F1F1F] rounded-lg shadow-md p-3 pt-0 h-[82vh] max-h-[82vh] overflow-y-auto">
+            {/* main content - mobile optimized height and scrolls internally */}
+            <div className="bg-[#1F1F1F] rounded-lg shadow-md p-3 pt-0 h-[62vh] max-h-[62vh] md:h-[82vh] md:max-h-[82vh] overflow-y-auto">
               {/* STICKY HEADER: Title + Controls + Audio Player (stays fixed) */}
-              <div className="sticky top-0 z-20 bg-[#1F1F1F] pt-3 pb-4">
+              <div className="sticky top-0 z-20 bg-[#1F1F1F] pt-2 pb-3 md:pt-3 md:pb-4">
                 <div className="flex justify-between items-center mb-1">
                   {selectedChapter ? (
-                    <h2 className="text-2xl font-bold text-white">
+                    <h2 className="text-lg md:text-2xl font-bold text-white truncate">
                       {selectedChapter.title}
                     </h2>
                   ) : (
-                    <h2 className="text-2xl font-bold text-white">
+                    <h2 className="text-lg md:text-2xl font-bold text-white truncate">
                       {book.title}
                     </h2>
                   )}
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 md:space-x-3">
                     <TextMagnifier />
                     <LikeButton bookId={params?.id as string} className="text-white hover:text-red-500" />
                     <SaveButton bookId={params?.id as string} className="text-white hover:text-primary" />
@@ -396,25 +494,27 @@ export default function ViewBookPage() {
                 </div>
                 {/* Audio Player stays inside sticky header */}
                 {selectedChapter && (selectedChapter.audioUrl || currentAudioUrl === selectedChapter.audioUrl) && (
-                  <div className="mb-3">
-                    <div className="bg-[#2a2a2a] rounded-lg p-3">
-                      <h3 className="text-lg font-semibold text-white mb-2 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                  <div className="mb-2 md:mb-3">
+                    <div className="bg-[#2a2a2a] rounded-lg p-2 md:p-3">
+                      <h3 className="text-sm md:text-lg font-semibold text-white mb-1 md:mb-2 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2 text-primary" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
-                        Listen to Episode
+                        <span className="hidden md:inline">Listen to Episode</span>
+                        <span className="md:hidden">Episode</span>
                       </h3>
                       {user ? (
-                        <AudioPlayer audioUrl={selectedChapter.audioUrl} />
+                        <AudioPlayer audioUrl={selectedChapter.audioUrl} className="p-2 md:p-4" showPlaybackSpeed={false} />
                       ) : (
                         <Link
                           href={`/auth/signin/?redirect=${encodeURIComponent(window.location.pathname)}`}
-                          className="flex items-center justify-center gap-2 bg-primary text-white py-2 px-4 rounded hover:bg-primary-dark transition-colors w-full"
+                          className="flex items-center justify-center gap-1 md:gap-2 bg-primary text-white py-1 px-2 md:py-2 md:px-4 rounded hover:bg-primary-dark transition-colors w-full text-sm md:text-base"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                           </svg>
-                          Login to Listen
+                          <span className="hidden md:inline">Login to Listen</span>
+                          <span className="md:hidden">Login</span>
                         </Link>
                       )}
                     </div>
@@ -422,7 +522,7 @@ export default function ViewBookPage() {
                 )}
               </div>
               {/* SCROLLABLE PROSE: only this section scrolls */}
-              <div className="prose prose-invert max-w-none px-0">
+              <div className="prose prose-invert max-w-none px-0 prose-sm md:prose-base">
                 {selectedChapter ? (
                   <div dangerouslySetInnerHTML={{ __html: cleanContent(selectedChapter.content) }} />
                 ) : book.content ? (
@@ -436,8 +536,8 @@ export default function ViewBookPage() {
             </div>
           </div>
           
-          {/* Right Sidebar - Episodes List */}
-          <div className="md:col-span-3">
+          {/* Desktop Right Sidebar - Episodes List */}
+          <div className="hidden md:block md:col-span-3">
             <div className="bg-[#1F1F1F] rounded-lg shadow-md p-4 sticky top-4">
               <h2 className="text-lg font-bold text-white mb-3">Episodes</h2>
               {book.chapters && book.chapters.length > 0 ? (

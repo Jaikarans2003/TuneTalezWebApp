@@ -191,7 +191,7 @@ function HomeContent() {
           </div>
         ) : (
           <>
-            {/* Featured Collection - Recently Added Books */}  +
+            {/* Featured Collection - Recently Added Books */}  
             <section id="featured-collection" className="mb-16 py-16">
               <div className="flex flex-col md:flex-row justify-between items-center mb-12 animate-fade-in">  
                 <div className="mb-6 md:mb-0 animate-slide-up">

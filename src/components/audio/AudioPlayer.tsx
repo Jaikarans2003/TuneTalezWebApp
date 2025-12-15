@@ -244,9 +244,6 @@ const AudioPlayer = ({
             </button>
             
             <div className="flex-1 mx-4">
-              {audioFormat && (
-                <div className="text-xs text-gray-400 mb-1">Format: {audioFormat}</div>
-              )}
               <input
                 type="range"
                 min="0"
