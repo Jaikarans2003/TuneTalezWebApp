@@ -30,13 +30,18 @@ export default function UserManagement() {
     fetchUsers();
   }, []);
 
-  const updateUserRole = async (uid: string, newRole: 'reader' | 'author' | 'admin', currentRole: string) => {
-    // Prevent role downgrade from author to reader
+  const updateUserRole = async (
+    uid: string,
+    newRole: 'reader' | 'author' | 'admin',
+    currentRole: 'reader' | 'author' | 'admin'
+  ) => {
     if (currentRole === 'author' && newRole === 'reader') {
-      alert('Cannot downgrade an author to reader. Once a user becomes an author, they cannot revert to reader.');
-      return;
+      const confirmed = window.confirm(
+        'Change this user from author to reader? This may remove access to author features.'
+      );
+      if (!confirmed) return;
     }
-    
+
     try {
       const userRef = doc(db, 'users', uid);
       await updateDoc(userRef, { role: newRole });
@@ -130,7 +135,7 @@ export default function UserManagement() {
                     onChange={(e) => updateUserRole(user.uid, e.target.value as 'reader' | 'author' | 'admin', user.role)}
                     className="px-2 py-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#FF0000] bg-black text-white border-[#333333]"
                   >
-                    <option value="reader" disabled={user.role === 'author'}>Reader</option>
+                    <option value="reader">Reader</option>
                     <option value="author">Author</option>
                     <option value="admin">Admin</option>
                   </select>

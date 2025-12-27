@@ -22,9 +22,10 @@ import ShareButton from './ShareButton';
 interface BookCardProps {
   book: BookDocument;
   onDelete?: (book: BookDocument) => void;
+  isLandingPage?: boolean;
 }
 
-const BookCard = ({ book, onDelete }: BookCardProps) => {
+const BookCard = ({ book, onDelete, isLandingPage }: BookCardProps) => {
   const handleDelete = (e: React.MouseEvent) => {
     // Stop propagation to prevent navigation when delete button is clicked
     e.stopPropagation();
@@ -83,11 +84,20 @@ const BookCard = ({ book, onDelete }: BookCardProps) => {
           <h3 className="font-bold text-white mb-1 line-clamp-1">{book.title}</h3>
           <p className="text-gray-400 text-sm mb-2">{book.author}</p>
           <div className="flex flex-wrap gap-1 mt-auto">
-            {book.tags?.map((tag, index) => (
-              <span key={index} className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded transition-all duration-300 hover:bg-primary/20 hover:text-white cursor-pointer">
-                {tag}
+            {book.tags && book.tags.length > 0 && (
+              <span className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded transition-all duration-300 hover:bg-primary/20 hover:text-white cursor-pointer">
+                {book.tags[0]}
               </span>
-            ))}
+            )}
+            {!isLandingPage && book.tags && book.tags.length > 1 && (
+              <>
+                {book.tags.slice(1).map((tag, index) => (
+                  <span key={index + 1} className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded transition-all duration-300 hover:bg-primary/20 hover:text-white cursor-pointer">
+                    {tag}
+                  </span>
+                ))}
+              </>
+            )}
           </div>
           {onDelete && (
             <button

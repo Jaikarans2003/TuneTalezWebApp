@@ -259,7 +259,7 @@ function HomeContent() {
                     .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
                     .map((book, index) => (
                       <div key={book.id} className={`animate-fade-in stagger-${Math.min(index % 5 + 1, 5)}`}>
-                        <BookCard book={book} />
+                        <BookCard book={book} isLandingPage={true} />
                       </div>
                     ))}
                 </div>
@@ -304,7 +304,7 @@ function HomeContent() {
                   .slice(0, 10)
                   .map((book, index) => (
                     <div key={book.id} className={`animate-fade-in stagger-${Math.min(index % 5 + 1, 5)}`}>
-                      <BookCard book={book} />
+                      <BookCard book={book} isLandingPage={true} />
                     </div>
                   ))}
               </div>
@@ -348,7 +348,7 @@ function HomeContent() {
                   .slice(0, 10)
                   .map((book, index) => (
                     <div key={book.id} className={`animate-fade-in stagger-${Math.min(index % 5 + 1, 5)}`}>
-                      <BookCard book={book} />
+                      <BookCard book={book} isLandingPage={true} />
                     </div>
                   ))}
               </div>
