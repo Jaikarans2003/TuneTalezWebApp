@@ -212,6 +212,7 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
   const [publishMode, setPublishMode] = useState<'single' | 'episodes'>('single');
   const [bookId, setBookId] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [wordCount, setWordCount] = useState(0);
 
   // Handle thumbnail selection
   const handleThumbnailChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -322,6 +323,10 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       setContent(html);
+      
+      // Count words whenever content changes
+      const words = countWords(html);
+      setWordCount(words);
 
       if (publishMode === 'single' && !html.trim()) {
         setContentError('Content is required for single-chapter books');
@@ -337,6 +342,9 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
   useEffect(() => {
     if (editor) {
       setEditorLoaded(true);
+      // Initialize word count with existing content
+      const words = countWords(content);
+      setWordCount(words);
     }
   }, [editor]);
 
@@ -346,6 +354,14 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
       editor.setEditable(!uploading);
     }
   }, [uploading, editor]);
+
+  // Function to count words in HTML content
+  const countWords = (htmlContent: string): number => {
+    // Remove HTML tags and count words
+    const text = htmlContent.replace(/<[^>]*>/g, ' ').trim();
+    if (!text) return 0;
+    return text.split(/\s+/).filter(word => word.length > 0).length;
+  };
 
   // Handle chapters change
   const handleChaptersChange = (updatedChapters: Chapter[]) => {
@@ -742,6 +758,9 @@ const BookForm = ({ onSuccess }: BookFormProps) => {
               <label htmlFor="content" className="block text-sm font-medium text-gray-300">
                 Book Content *
               </label>
+              <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+                {wordCount} words
+              </span>
 
               {/* Audio Narration Button */}
               {content && (

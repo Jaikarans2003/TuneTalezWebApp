@@ -210,6 +210,7 @@ const ChapterEditor = ({
   const [editorLoaded, setEditorLoaded] = useState(false);
   const [titleError, setTitleError] = useState<string>('');
   const [contentError, setContentError] = useState<string>('');
+  const [wordCount, setWordCount] = useState(0);
 
   // Initialize Tiptap editor
   const editor = useEditor({
@@ -234,6 +235,10 @@ const ChapterEditor = ({
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       setContent(html);
+      
+      // Count words whenever content changes
+      const words = countWords(html);
+      setWordCount(words);
 
       if (!html.trim()) {
         setContentError('Content is required');
@@ -257,8 +262,19 @@ const ChapterEditor = ({
   useEffect(() => {
     if (editor) {
       setEditorLoaded(true);
+      // Initialize word count with existing content
+      const words = countWords(content);
+      setWordCount(words);
     }
   }, [editor]);
+
+  // Function to count words in HTML content
+  const countWords = (htmlContent: string): number => {
+    // Remove HTML tags and count words
+    const text = htmlContent.replace(/<[^>]*>/g, ' ').trim();
+    if (!text) return 0;
+    return text.split(/\s+/).filter(word => word.length > 0).length;
+  };
 
   // Handle title change
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -351,9 +367,14 @@ const ChapterEditor = ({
 
       {/* Content */}
       <div className="mb-2">
-        <label htmlFor={`chapter-content-${chapter.id || 'new'}`} className="block text-sm font-medium text-gray-300 mb-1">
-          Episode Content *
-        </label>
+        <div className="flex justify-between items-center mb-1">
+          <label htmlFor={`chapter-content-${chapter.id || 'new'}`} className="block text-sm font-medium text-gray-300">
+            Episode Content *
+          </label>
+          <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+            {wordCount} words
+          </span>
+        </div>
 
         {/* Tiptap Editor */}
         <div className="border border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-primary overflow-hidden">

@@ -175,6 +175,7 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [wordCount, setWordCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle thumbnail selection
@@ -229,6 +230,10 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       setContent(html);
+      
+      // Count words whenever content changes
+      const words = countWords(html);
+      setWordCount(words);
 
       if (!html.trim()) {
         setContentError('Content is required');
@@ -244,6 +249,9 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
   useEffect(() => {
     if (editor) {
       setEditorLoaded(true);
+      // Initialize word count with existing content
+      const words = countWords(content);
+      setWordCount(words);
     }
   }, [editor]);
 
@@ -296,6 +304,14 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
       console.error('Error uploading thumbnail:', error);
       throw error;
     }
+  };
+
+  // Function to count words in HTML content
+  const countWords = (htmlContent: string): number => {
+    // Remove HTML tags and count words
+    const text = htmlContent.replace(/<[^>]*>/g, ' ').trim();
+    if (!text) return 0;
+    return text.split(/\s+/).filter(word => word.length > 0).length;
   };
 
   // Direct create book function that bypasses the service layer
@@ -514,9 +530,14 @@ const AdminDirectUploadForm = ({ onSuccess }: AdminDirectUploadFormProps) => {
 
         {/* Content */}
         <div className="mb-6">
-          <label htmlFor="content" className="block text-sm font-medium text-gray-300 mb-1">
-            Book Content *
-          </label>
+          <div className="flex justify-between items-center mb-1">
+            <label htmlFor="content" className="block text-sm font-medium text-gray-300">
+              Book Content *
+            </label>
+            <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">
+              {wordCount} words
+            </span>
+          </div>
 
           {/* Tiptap Editor */}
           <div className="border border-gray-600 rounded-md focus-within:ring-2 focus-within:ring-primary overflow-hidden">
